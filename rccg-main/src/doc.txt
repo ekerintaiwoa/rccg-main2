@@ -1,0 +1,7 @@
+Username: admin
+Email: admin@example.com
+Password: Admin123!
+You can log in at http://localhost:8050/admin/ using those credentials and change the password there if you’d like.
+You’re now fully set up to manage con
+
+cd c:/Users/emman/Downloads/rccg/backend; ..\.venv\Scripts\python.exe manage.py makemigrations content; ..\.venv\Scripts\python.exe manage.py migrate; ..\.venv\Scripts\python.exe manage.py seed_frontend_content runserver 8050
