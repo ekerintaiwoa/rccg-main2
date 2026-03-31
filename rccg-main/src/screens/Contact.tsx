@@ -10,7 +10,7 @@ export const Contact: React.FC = () => {
   React.useEffect(() => {
     const fetchPageData = async () => {
       try {
-        const res = await fetch('http://localhost:8060/api/contact-info/');
+        const res = await fetch('https://backend-production-f755.up.railway.app/api/contact-info/');
         if (res.ok) {
           const data = await res.json();
           setPageData(data);
@@ -33,7 +33,7 @@ export const Contact: React.FC = () => {
     const payload = Object.fromEntries(formData.entries());
 
     try {
-      await fetch('http://localhost:8060/api/contact/', {
+      await fetch('https://backend-production-f755.up.railway.app/api/contact/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

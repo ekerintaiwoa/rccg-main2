@@ -22,7 +22,7 @@ export const Blog: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('http://localhost:8060/api/blogs/');
+        const response = await fetch('https://backend-production-f755.up.railway.app/api/blogs/');
         if (!response.ok) {
           throw new Error('Failed to load blog posts');
         }

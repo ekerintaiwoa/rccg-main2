@@ -21,9 +21,9 @@ export const Library: React.FC = () => {
             try {
                 const headers = token ? { 'Authorization': `Token ${token}` } : {};
                 const [booksRes, audiosRes, quizzesRes] = await Promise.all([
-                    fetch('http://localhost:8060/api/books/', { headers }),
-                    fetch('http://localhost:8060/api/audios/', { headers }),
-                    fetch('http://localhost:8060/api/quizzes/', { headers })
+                    fetch('https://backend-production-f755.up.railway.app/api/books/', { headers }),
+                    fetch('https://backend-production-f755.up.railway.app/api/audios/', { headers }),
+                    fetch('https://backend-production-f755.up.railway.app/api/quizzes/', { headers })
                 ]);
 
                 if (booksRes.ok) setBooks(await booksRes.json());
@@ -43,7 +43,7 @@ export const Library: React.FC = () => {
         setAuthError('');
         const endpoint = isLoginView ? 'login/' : 'register/';
         try {
-            const res = await fetch(`http://localhost:8060/api/${endpoint}`, {
+            const res = await fetch(`https://backend-production-f755.up.railway.app/api/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(authForm)
@@ -63,7 +63,7 @@ export const Library: React.FC = () => {
     const submitBookAnswer = async (questionId: number, text: string) => {
         if (!token) return;
         try {
-            const res = await fetch('http://localhost:8060/api/submit-answer/', {
+            const res = await fetch('https://backend-production-f755.up.railway.app/api/submit-answer/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

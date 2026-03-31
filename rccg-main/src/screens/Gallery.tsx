@@ -10,7 +10,7 @@ export const Gallery: React.FC = () => {
     useEffect(() => {
         const fetchGallery = async () => {
             try {
-                const res = await fetch('http://localhost:8060/api/gallery/');
+                const res = await fetch('https://backend-production-f755.up.railway.app/api/gallery/');
                 if (res.ok) {
                     setImages(await res.json());
                 }

@@ -104,7 +104,7 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
   const resolveMediaUrl = (path?: string | null): string | null => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    return `http://localhost:8060${path}`;
+    return `https://backend-production-f755.up.railway.app${path}`;
   };
 
   React.useEffect(() => {
@@ -134,7 +134,7 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
   React.useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch('http://localhost:8060/api/events/');
+        const res = await fetch('https://backend-production-f755.up.railway.app/api/events/');
         if (!res.ok) {
           throw new Error('Failed to load events');
         }
@@ -148,7 +148,7 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
 
     const fetchHomeSections = async () => {
       try {
-        const res = await fetch('http://localhost:8060/api/home-sections/');
+        const res = await fetch('https://backend-production-f755.up.railway.app/api/home-sections/');
         if (res.ok) {
           const data = await res.json();
           setHomeSections(data);

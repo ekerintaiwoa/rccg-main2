@@ -18,7 +18,7 @@ export const OpenHeaven: React.FC = () => {
   React.useEffect(() => {
     const fetchDevotions = async () => {
       try {
-        const res = await fetch('http://localhost:8060/api/devotionals/');
+        const res = await fetch('https://backend-production-f755.up.railway.app/api/devotionals/');
         if (!res.ok) {
           throw new Error('Failed to load devotionals');
         }
