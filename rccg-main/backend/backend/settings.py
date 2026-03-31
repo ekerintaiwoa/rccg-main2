@@ -27,6 +27,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://backend-production-f755.up.railway.app',
+    'https://rccg-main-production.up.railway.app',
+]
+
 
 # Application definition
 
