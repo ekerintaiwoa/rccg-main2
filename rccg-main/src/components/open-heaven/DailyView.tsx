@@ -29,7 +29,7 @@ export const DailyView: React.FC<DailyViewProps> = ({ devotional, loading }) => 
   const displayDate = formatDisplayDate(new Date(devotional.date));
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-12"
@@ -59,7 +59,7 @@ export const DailyView: React.FC<DailyViewProps> = ({ devotional, loading }) => 
         {devotional.bible_reading && (
           <div className="bg-surface-container-low text-on-surface rounded-xl p-8 md:p-10 shadow-sm border border-outline-variant/30">
             <div className="flex items-start gap-4 mb-4">
-              <span className="material-symbols-outlined text-3xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>menu_book</span>
+               <span className="material-symbols-outlined text-3xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>menu_book</span>
               <span className="font-label font-bold tracking-widest text-xs uppercase pt-1 text-primary">Today's Bible Reading</span>
             </div>
             <p className="font-headline text-xl leading-relaxed">
@@ -74,7 +74,7 @@ export const DailyView: React.FC<DailyViewProps> = ({ devotional, loading }) => 
           {devotional.content.map((para, i) => (
             <p key={i}>{para}</p>
           ))}
-          
+
           {devotional.reflection && (
             <div className="bg-surface-container-low rounded-xl p-8 my-10 space-y-4">
               <h3 className="font-headline text-xl font-bold text-primary">Points for Reflection</h3>
@@ -95,7 +95,7 @@ export const DailyView: React.FC<DailyViewProps> = ({ devotional, loading }) => 
         <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-container opacity-50"></div>
         <div className="relative z-10 space-y-4">
           <span className="material-symbols-outlined text-secondary-fixed text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>flare</span>
-          <h3 className="font-headline text-2xl font-bold">Prayer Point</h3>
+          <h3 className="font-headline text-2xl font-bold">Key Point</h3>
           <p className="font-body text-xl italic max-w-md mx-auto leading-relaxed">
             "{devotional.prayer_point}"
           </p>

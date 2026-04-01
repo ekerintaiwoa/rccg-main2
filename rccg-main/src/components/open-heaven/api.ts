@@ -33,28 +33,28 @@ const parseDevotionalText = (rawMessage: string, title: string, date: string): D
   };
 
   const nextHeadings = [
-    /\n\s*(?:READ|Read):?/, 
-    /\n\s*(?:MESSAGE|Message)\s*\n/, 
-    /\n\s*(?:KEY POINT|Key Point|PRAYER POINT|Prayer Point|ACTION POINT)/, 
-    /\n\s*(?:HYMN|Hymn)/,
-    /\n\s*(?:BIBLE IN ONE YEAR|Bible in one year)/i
+    /\n[^\n]*?(?:READ|Read|BIBLE TEXT)\s*:/i, 
+    /\n[^\n]*?(?:MESSAGE|Message)\s*\n/i, 
+    /\n[^\n]*?(?:KEY POINT|PRAYER POINT|ACTION POINT)[^\n]*\n/i, 
+    /\n[^\n]*?(?:HYMN|Hymn)[^\n]*/i,
+    /\n[^\n]*?(?:BIBLE IN ONE YEAR|Bible in one year)/i
   ];
 
-  const mvSection = extractContent(/\n\s*(?:MEMORISE|Memorise)\s*\n/i, nextHeadings);
-  const verses = extractContent(/\n\s*(?:READ|Read):?/i, nextHeadings);
-  const messageContent = extractContent(/\n\s*(?:MESSAGE|Message)\s*\n/i, nextHeadings);
-  const prayerPoints = extractContent(/\n\s*(?:KEY POINT|Key Point|PRAYER POINT|Prayer Point|ACTION POINT)/i, nextHeadings);
-  const hymnContent = extractContent(/\n\s*(?:HYMN|Hymn)[^\n]*/i, nextHeadings);
+  const mvSection = extractContent(/\n[^\n]*?(?:MEMORISE|Memorise|MEMORY VERSE)\s*\n/i, nextHeadings);
+  const verses = extractContent(/\n[^\n]*?(?:READ|Read|BIBLE TEXT)\s*:/i, nextHeadings);
+  const messageContent = extractContent(/\n[^\n]*?(?:MESSAGE|Message)\s*\n/i, nextHeadings);
+  const prayerPoints = extractContent(/\n[^\n]*?(?:KEY POINT|PRAYER POINT|ACTION POINT)[^\n]*\n/i, nextHeadings);
+  const hymnContent = extractContent(/\n[^\n]*?(?:HYMN|Hymn)[^\n]*/i, nextHeadings);
   
   const mvLines = mvSection.split('\n').map(l=>l.trim()).filter(Boolean);
   // Reconstruct memory verse string if split
   let memory_verse = '';
   let memory_verse_text = mvSection;
 
-  // The verse is often at the end of the MEMORISE block like "Mark 11:23"
+  // The verse is often at the end of the MEMORISE block like "Mark 11:23" or "(Ecclesiastes 9:8)"
   // But let's just make the whole block the `memory_verse_text` and try to extract the citation
-  const citationMatch = mvSection.match(/([a-zA-Z1-3]+ \d+:\d+(?:-\d+)?)$/i);
-  if (citationMatch) {
+  const citationMatch = mvSection.match(/([1-3]?\s*[a-zA-Z]+\s+\d+:\d+(?:-\d+)?)[^\w]*$/i);
+  if (citationMatch) { 
     memory_verse = citationMatch[1];
     memory_verse_text = mvSection.replace(citationMatch[1], '').trim();
   } else {
