@@ -1,0 +1,4 @@
+Username: admin
+Password (temporary): V7k!p3Bq9@Lm2#Rz5TnQ
+Email: admin@rccg.local
+To log in, open your backend admin at https://backend-production-f755.up.railway.app/admin/ (or whatever your backend Railway URL is) and sign in with the credentials above.
