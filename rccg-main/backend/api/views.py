@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.utils import timezone
 from rest_framework.authtoken.models import Token
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
@@ -31,6 +32,199 @@ from .serializers import (
     OnlineGivingPageSerializer,
     GivingRecordSerializer
 )
+
+
+def _http_get(url: str, timeout_seconds: int = 20) -> str:
+    import urllib.request
+
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/122.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/json;q=0.9,*/*;q=0.8",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
+        charset = resp.headers.get_content_charset() or "utf-8"
+        return resp.read().decode(charset, errors="replace")
+
+
+def _strip_html_to_text(html: str) -> str:
+    import html as html_lib
+    import re
+
+    text = html
+    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"</p\s*>", "\n\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"</(?:div|li|h1|h2|h3|h4|h5|h6)\s*>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = html_lib.unescape(text)
+    return text
+
+
+def _extract_blogger_post_body(post_html: str) -> str:
+    import re
+
+    match = re.search(
+        r"<div class=['\"]post-body[^>]*>([\s\S]*?)<div class=['\"]post-footer['\"]",
+        post_html,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        return match.group(1)
+    return post_html
+
+
+def _parse_openheavens_text(raw_text: str, title: str, date_str: str) -> dict:
+    import re
+
+    message = raw_text
+
+    def extract_content(start_marker: str, end_markers: list[str]) -> str:
+        start = re.search(start_marker, message, flags=re.IGNORECASE | re.MULTILINE)
+        if not start:
+            return ""
+        rest = message[start.end() :].lstrip()
+        end_idx = len(rest)
+        for end_marker in end_markers:
+            end = re.search(end_marker, rest, flags=re.IGNORECASE | re.MULTILINE)
+            if end and end.start() < end_idx:
+                end_idx = end.start()
+        return rest[:end_idx].strip()
+
+    next_headings = [
+        r"\n[^\n]*?(?:READ|BIBLE TEXT)\s*:\s*",
+        r"\n[^\n]*?(?:MESSAGE)\s*\n",
+        r"\n[^\n]*?(?:KEY POINT|PRAYER POINT|ACTION POINT)[^\n]*\n",
+        r"\n[^\n]*?(?:HYMN)[^\n]*",
+        r"\n[^\n]*?(?:BIBLE IN ONE YEAR)",
+    ]
+
+    mv_section = extract_content(r"\n[^\n]*?(?:MEMORISE|MEMORY VERSE)\s*\n", next_headings)
+    verses_section = extract_content(r"\n[^\n]*?(?:READ|BIBLE TEXT)\s*:\s*", next_headings)
+    message_section = extract_content(r"\n[^\n]*?(?:MESSAGE)\s*\n", next_headings)
+    prayer_points_section = extract_content(
+        r"\n[^\n]*?(?:KEY POINT|PRAYER POINT|ACTION POINT)[^\n]*\n",
+        next_headings,
+    )
+    hymn_section = extract_content(r"\n[^\n]*?(?:HYMN)[^\n]*", next_headings)
+
+    memory_verse_text = mv_section
+    memory_verse = "Memory Verse"
+    if mv_section:
+        citation_match = re.search(r"([1-3]?\s*[A-Za-z]+\s+\d+:\d+(?:-\d+)?)[^\w]*$", mv_section)
+        if citation_match:
+            memory_verse = citation_match.group(1)
+            memory_verse_text = mv_section.replace(memory_verse, "").strip()
+
+    bible_reading = "Today's Reading"
+    if verses_section:
+        bible_reading = verses_section.splitlines()[0].strip() or bible_reading
+
+    content_paragraphs = [p.strip() for p in re.split(r"\n\n+", message_section) if p.strip()]
+    if not content_paragraphs:
+        content_paragraphs = [message.strip()[:500] + "..."] if message.strip() else []
+
+    prayer_point = " ".join([p.strip() for p in prayer_points_section.splitlines() if p.strip()])
+
+    return {
+        "title": title or "Daily Devotional",
+        "date": date_str,
+        "topic": "",
+        "bible_reading": bible_reading,
+        "memory_verse": memory_verse,
+        "memory_verse_text": memory_verse_text,
+        "content": content_paragraphs,
+        "prayer_point": prayer_point,
+        "hymn": hymn_section,
+        "reflection": None,
+    }
+
+
+class OpenHeavenView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        import json
+        import re
+        import datetime
+
+        date_str = request.query_params.get("date")
+        if not date_str:
+            date_str = timezone.localdate().isoformat()
+
+        feed_url = "https://www.openheavensdaily.com/feeds/posts/default?alt=json&max-results=60"
+        try:
+            feed_raw = _http_get(feed_url)
+            feed = json.loads(feed_raw)
+            entries = feed.get("feed", {}).get("entry", [])
+            if not entries:
+                return Response({"detail": "No feed entries"}, status=status.HTTP_502_BAD_GATEWAY)
+
+            # Match by the date embedded in the post title.
+            # OpenHeavens often publishes the post a day early, so timestamps can be misleading.
+            target_entry = None
+            try:
+                target_date = datetime.date.fromisoformat(date_str)
+            except ValueError:
+                return Response({"detail": "Invalid date format. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+
+            month_name = target_date.strftime("%B").lower()
+            month_abbrev = target_date.strftime("%b").lower()
+            month_candidates = {month_name, month_abbrev}
+            if month_abbrev == "sep":
+                month_candidates.add("sept")
+            year_str = str(target_date.year)
+            day_num = target_date.day
+            # Use real word boundaries (\b). Accept optional leading zero and ordinal suffix.
+            day_re = re.compile(rf"\b0?{day_num}(st|nd|rd|th)?\b", re.IGNORECASE)
+
+            for entry in entries:
+                title_text = ((entry.get("title", {}) or {}).get("$t", "") or "").lower()
+                # Order-agnostic match: title must include month + year and contain the day number.
+                # This covers both "APRIL 1st 2026" and "1 APRIL 2026".
+                if any(m in title_text for m in month_candidates) and year_str in title_text and day_re.search(title_text):
+                    target_entry = entry
+                    break
+
+            # Fallback: match by published/updated timestamp date.
+            # Note: this can be off by 1 day because posts are sometimes published early,
+            # so we only use it if no title match was found.
+            if not target_entry:
+                for entry in entries:
+                    published = (entry.get("published", {}) or {}).get("$t", "")
+                    updated = (entry.get("updated", {}) or {}).get("$t", "")
+                    stamp = published or updated
+                    if stamp.startswith(date_str):
+                        target_entry = entry
+                        break
+
+            if not target_entry:
+                return Response({"detail": "Devotional not found for date"}, status=status.HTTP_404_NOT_FOUND)
+
+            title = (target_entry.get("title", {}) or {}).get("$t", "")
+            links = target_entry.get("link", []) or []
+            post_href = None
+            for link in links:
+                if link.get("rel") == "alternate":
+                    post_href = link.get("href")
+                    break
+
+            raw_html = (target_entry.get("content", {}) or {}).get("$t") or (target_entry.get("summary", {}) or {}).get("$t") or ""
+            if post_href:
+                post_html = _http_get(post_href)
+                raw_html = _extract_blogger_post_body(post_html)
+
+            text = _strip_html_to_text(raw_html)
+            devotional = _parse_openheavens_text(text, title, date_str)
+            return Response(devotional)
+        except Exception as exc:
+            return Response({"detail": "Failed to fetch devotional", "error": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
 
 
 class EventViewSet(viewsets.ModelViewSet):

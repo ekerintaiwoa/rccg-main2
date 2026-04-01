@@ -1,5 +1,3 @@
-import React from 'react';
-
 import React, { useState, useEffect } from 'react';
 import { DailyView } from '../components/open-heaven/DailyView';
 import { CalendarView } from '../components/open-heaven/CalendarView';
@@ -10,13 +8,21 @@ export const OpenHeaven: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [devotional, setDevotional] = useState<Devotional | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      setError(null);
       const dateStr = formatDateForApi(selectedDate);
-      const data = await fetchDevotional(dateStr);
-      setDevotional(data);
+      try {
+        const data = await fetchDevotional(dateStr);
+        setDevotional(data);
+      } catch (e) {
+        console.error(e);
+        setDevotional(null);
+        setError('Unable to load the devotional right now. Please try again.');
+      }
       setLoading(false);
     };
     loadData();
@@ -40,7 +46,7 @@ export const OpenHeaven: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-10 items-start">
         {/* Core Daily Viewer */}
         <div className="flex-1 w-full min-w-0">
-          <DailyView devotional={devotional} loading={loading} />
+          <DailyView devotional={devotional} loading={loading} error={error} />
         </div>
         
         {/* Side-by-Side Calendar Component */}

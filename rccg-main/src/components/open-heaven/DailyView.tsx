@@ -6,13 +6,23 @@ import { formatDisplayDate } from './api';
 interface DailyViewProps {
   devotional: Devotional | null;
   loading: boolean;
+  error?: string | null;
 }
 
-export const DailyView: React.FC<DailyViewProps> = ({ devotional, loading }) => {
+export const DailyView: React.FC<DailyViewProps> = ({ devotional, loading, error }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-pulse text-on-surface-variant font-label uppercase tracking-widest">Loading Devotional...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
+        <h2 className="font-headline text-3xl font-bold text-primary mb-4">Unable to Load Devotional</h2>
+        <p className="text-on-surface-variant">{error}</p>
       </div>
     );
   }

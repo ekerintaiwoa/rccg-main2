@@ -1,5 +1,7 @@
 import { Devotional } from './types';
 
+const BACKEND_BASE_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'https://backend-production-f755.up.railway.app';
+
 const FALLBACK_URL = 'https://corsproxy.io/?' + encodeURIComponent('https://www.openheavensdaily.com/feeds/posts/default?alt=json&max-results=30');
 
 const decodeHtml = (text: string) => {
@@ -85,6 +87,18 @@ const parseDevotionalText = (rawMessage: string, title: string, date: string): D
 
 export async function fetchDevotional(date: string): Promise<Devotional | null> {
   try {
+    // Prefer our backend proxy (server-side fetch avoids CORS/proxy blocks)
+    const backendRes = await fetch(`${BACKEND_BASE_URL}/api/open-heaven/?date=${encodeURIComponent(date)}`);
+    if (backendRes.ok) {
+      return (await backendRes.json()) as Devotional;
+    }
+
+    // If backend says "not found", respect that.
+    if (backendRes.status === 404) {
+      return null;
+    }
+
+    // Otherwise, fall back to the legacy public proxy.
     const res = await fetch(FALLBACK_URL);
     if (!res.ok) return null;
     const data = await res.json();

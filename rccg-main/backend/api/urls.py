@@ -23,7 +23,8 @@ from .views import (
     PrayerRequestViewSet,
     HomeSectionViewSet,
     OnlineGivingPageView,
-    GivingRecordViewSet
+    GivingRecordViewSet,
+    OpenHeavenView
 )
 
 router = DefaultRouter()
@@ -51,6 +52,7 @@ urlpatterns = [
     path("login/", obtain_auth_token, name="login"),
     path("submit-answer/", SubmitAnswerView.as_view(), name="submit-answer"),
     path("online-giving/", OnlineGivingPageView.as_view(), name="online-giving"),
+	path("open-heaven/", OpenHeavenView.as_view(), name="open-heaven"),
 ]
 
 
