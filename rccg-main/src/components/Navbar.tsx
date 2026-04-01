@@ -44,7 +44,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 Rccg House of Glory Parish Lübeck
               </span>
               <span className="text-sm font-semibold italic text-blue-800 whitespace-nowrap mt-0.5">
-                Jesus Christ the same yesterday, and to day, and for ever (Hebrews 13:8).
+                Jesus Christ thesame yesterday, today and forever (Hebrews 13:8).
+                
               </span>
             </div>
           </div>
