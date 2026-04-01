@@ -11,7 +11,7 @@ export const Footer: React.FC = () => {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Cross className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold">GRACE COMMUNITY</span>
+              <span className="text-lg font-bold">RCCG Lübeck</span>
             </div>
             <p className="max-w-xs mb-8">
               Empowering our community through faith, hope, and love. Join us this Sunday.
@@ -36,7 +36,7 @@ export const Footer: React.FC = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-blue-500" />
-                hello@gracecommunity.church
+                info@rccglübeck.com
               </li>
             </ul>
           </div>
@@ -52,7 +52,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
         <div className="border-t border-slate-800 mt-16 pt-8 flex flex-col md:row justify-between items-center gap-4 text-xs">
-          <p>© 2023 Redeemed Christian Church of God. All rights reserved.</p>
+          <p>© 2026 Redeemed Christian Church of God. All rights reserved.</p>
           <div className="flex gap-6">
             <span className="hover:text-white cursor-pointer">Privacy Policy</span>
             <span className="hover:text-white cursor-pointer">Terms of Service</span>

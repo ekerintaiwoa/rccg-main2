@@ -1,0 +1,8 @@
+{
+  "name": "rccg-root",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix rccg-main ci && npm --prefix rccg-main run build",
+    "start": "npm --prefix rccg-main run start"
+  }
+}
