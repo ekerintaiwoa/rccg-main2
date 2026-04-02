@@ -7,10 +7,12 @@ export type Tab =
   | 'contact'
   | 'blog'
   | 'devotional'
+  | 'devotional'
   | 'library'
   | 'gallery'
   | 'prayer'
-  | 'bible';
+  | 'bible'
+  | 'live';
 
 export interface PrayerPointItem {
   id: number;

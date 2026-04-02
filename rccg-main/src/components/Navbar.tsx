@@ -15,6 +15,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
     { label: 'Home', value: 'home' },
     { label: 'Events', value: 'events' },
     { label: 'Sermons', value: 'sermons' },
+    { label: 'Live', value: 'live' },
     { label: 'About', value: 'about' },
     { label: 'Contact', value: 'contact' },
   ];
@@ -23,6 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
     { label: 'Home', value: 'home' },
     { label: 'Events', value: 'events' },
     { label: 'Sermons', value: 'sermons' },
+    { label: 'Live', value: 'live' },
     { label: 'Library', value: 'library' },
     { label: 'Gallery', value: 'gallery' },
     { label: 'Prayer', value: 'prayer' },

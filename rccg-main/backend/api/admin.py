@@ -8,7 +8,8 @@ from .models import (
     BookQuestion, UserAnswer, GalleryImage,
     DailyPrayer, PrayerPointItem, PrayerRequest,
     HomeSection, HomeSectionBullet,
-    OnlineGivingPage, GivingPurpose, GivingRecord
+    OnlineGivingPage, GivingPurpose, GivingRecord,
+    LiveStreamSettings
 )
 
 @admin.register(Event)
@@ -192,4 +193,12 @@ class GivingRecordAdmin(admin.ModelAdmin):
 	def get_donor_name(self, obj):
 		return str(obj)
 	get_donor_name.short_description = "Donor"
+
+
+@admin.register(LiveStreamSettings)
+class LiveStreamSettingsAdmin(admin.ModelAdmin):
+	def has_add_permission(self, request):
+		if self.model.objects.exists():
+			return False
+		return super().has_add_permission(request)
 

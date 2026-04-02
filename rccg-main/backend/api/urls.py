@@ -24,7 +24,8 @@ from .views import (
     HomeSectionViewSet,
     OnlineGivingPageView,
     GivingRecordViewSet,
-    OpenHeavenView
+    OpenHeavenView,
+    LiveStreamSettingsView
 )
 
 router = DefaultRouter()
@@ -53,6 +54,7 @@ urlpatterns = [
     path("submit-answer/", SubmitAnswerView.as_view(), name="submit-answer"),
     path("online-giving/", OnlineGivingPageView.as_view(), name="online-giving"),
 	path("open-heaven/", OpenHeavenView.as_view(), name="open-heaven"),
+    path("livestream/", LiveStreamSettingsView.as_view(), name="livestream"),
 ]
 
 

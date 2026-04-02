@@ -1,5 +1,5 @@
 import React from 'react';
-import { Book, Image as ImageIcon, Heart, BookOpen, Sun, FileText } from 'lucide-react';
+import { Book, Image as ImageIcon, Heart, BookOpen, Sun, FileText, Video } from 'lucide-react';
 import { Tab } from '../types';
 
 interface SidebarProps {
@@ -15,6 +15,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
         { label: 'Bible', value: 'bible', icon: <BookOpen className="w-5 h-5" /> },
         { label: 'Open Heaven', value: 'devotional', icon: <Sun className="w-5 h-5" /> },
         { label: 'Blog', value: 'blog', icon: <FileText className="w-5 h-5" /> },
+        { label: 'Live Service', value: 'live', icon: <Video className="w-5 h-5" /> },
     ];
 
     return (

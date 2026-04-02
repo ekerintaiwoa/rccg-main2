@@ -15,6 +15,7 @@ import { Library } from './screens/Library';
 import { Gallery } from './screens/Gallery';
 import { Prayer } from './screens/Prayer';
 import { Bible } from './screens/Bible';
+import { LiveStream } from './screens/LiveStream';
 import { Tab } from './types';
 import { AuthProvider } from './AuthContext';
 
@@ -22,7 +23,7 @@ export default function App() {
   const [activeTab, setActiveTab] = React.useState<Tab>(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab') as Tab;
-    const validTabs: Tab[] = ['home', 'events', 'sermons', 'give', 'about', 'contact', 'blog', 'devotional', 'library', 'gallery', 'prayer', 'bible'];
+    const validTabs: Tab[] = ['home', 'events', 'sermons', 'give', 'about', 'contact', 'blog', 'devotional', 'library', 'gallery', 'prayer', 'bible', 'live'];
     return validTabs.includes(tab) ? tab : 'home';
   });
 
@@ -44,7 +45,7 @@ export default function App() {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('tab') as Tab;
-      const validTabs: Tab[] = ['home', 'events', 'sermons', 'give', 'about', 'contact', 'blog', 'devotional', 'library', 'gallery', 'prayer', 'bible'];
+      const validTabs: Tab[] = ['home', 'events', 'sermons', 'give', 'about', 'contact', 'blog', 'devotional', 'library', 'gallery', 'prayer', 'bible', 'live'];
       if (validTabs.includes(tab)) {
         setActiveTab(tab);
       } else {
@@ -81,6 +82,8 @@ export default function App() {
         return <Prayer />;
       case 'bible':
         return <Bible />;
+      case 'live':
+        return <LiveStream />;
       default:
         return <Home setActiveTab={setActiveTab} />;
     }

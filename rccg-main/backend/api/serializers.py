@@ -6,7 +6,7 @@ from .models import (
     ContactPage, ContactMessage,
     Book, AudioFile, WeeklyQuiz, QuizQuestion, QuizOption, BookQuestion, UserAnswer,
     GalleryImage, DailyPrayer, PrayerPointItem, PrayerRequest, HomeSection, HomeSectionBullet,
-    OnlineGivingPage, GivingPurpose, GivingRecord
+    OnlineGivingPage, GivingPurpose, GivingRecord, LiveStreamSettings
 )
 
 class EventSerializer(serializers.ModelSerializer):
@@ -159,4 +159,10 @@ class GivingRecordSerializer(serializers.ModelSerializer):
         model = GivingRecord
         fields = "__all__"
         read_only_fields = ["reference_code", "status", "user"]
+
+
+class LiveStreamSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LiveStreamSettings
+        fields = "__all__"
 

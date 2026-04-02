@@ -1,4 +1,4 @@
-﻿from django.db import models
+from django.db import models
 from django.contrib.auth.models import User
 from PIL import Image, ImageOps
 
@@ -551,5 +551,25 @@ class GivingRecord(TimeStampedModel):
 			return f"Anonymous - {self.currency}{self.amount} - {self.reference_code}"
 		name = f"{self.first_name} {self.last_name}".strip() or (self.user.username if self.user else "Unknown")
 		return f"{name} - {self.currency}{self.amount} - {self.reference_code}"
+
+
+class LiveStreamSettings(TimeStampedModel):
+	title = models.CharField(max_length=200, default="Sunday Celebration Service")
+	youtube_url = models.URLField(default="https://www.youtube.com/watch?v=4H4mAG6Wc-Y")
+	service_day = models.CharField(max_length=20, default="Sunday")
+	start_time = models.TimeField(default="10:00:00")
+	end_time = models.TimeField(default="12:00:00")
+	timezone = models.CharField(max_length=50, default="Europe/Berlin")
+
+	class Meta:
+		verbose_name = "Live Stream Settings"
+		verbose_name_plural = "Live Stream Settings"
+
+	def __str__(self):
+		return "Live Stream Configuration"
+
+	def save(self, *args, **kwargs) -> None:
+		self.pk = 1  # Force singleton
+		super().save(*args, **kwargs)
 
 

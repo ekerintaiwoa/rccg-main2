@@ -10,7 +10,7 @@ from .models import (
     AboutPage, TeamMember, ContactPage, ContactMessage,
     Book, AudioFile, WeeklyQuiz, BookQuestion, UserAnswer,
     GalleryImage, DailyPrayer, PrayerRequest, HomeSection,
-    OnlineGivingPage, GivingPurpose, GivingRecord
+    OnlineGivingPage, GivingPurpose, GivingRecord, LiveStreamSettings
 )
 from .serializers import (
 	EventSerializer,
@@ -30,7 +30,8 @@ from .serializers import (
     PrayerRequestSerializer,
     HomeSectionSerializer,
     OnlineGivingPageSerializer,
-    GivingRecordSerializer
+    GivingRecordSerializer,
+    LiveStreamSettingsSerializer
 )
 
 
@@ -387,7 +388,15 @@ class GivingRecordViewSet(viewsets.ModelViewSet):
         
         if user.is_authenticated and not is_anonymous:
             serializer.save(user=user, reference_code=ref_code)
-        else:
             serializer.save(reference_code=ref_code)
+
+
+class LiveStreamSettingsView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        settings, _ = LiveStreamSettings.objects.get_or_create(pk=1)
+        serializer = LiveStreamSettingsSerializer(settings)
+        return Response(serializer.data)
 
 
