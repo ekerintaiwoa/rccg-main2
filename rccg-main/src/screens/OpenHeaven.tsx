@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Share2 } from 'lucide-react';
 import { DailyView } from '../components/open-heaven/DailyView';
 import { CalendarView } from '../components/open-heaven/CalendarView';
 import { Devotional } from '../components/open-heaven/types';
@@ -33,10 +34,32 @@ export const OpenHeaven: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Open Heaven Daily Devotional',
+        text: devotional ? devotional.title : 'Check out today\'s Open Heaven Devotional',
+        url: window.location.href
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert('Link copied to clipboard!');
+    }
+  };
+
   return (
     <section className="bg-slate-50 min-h-screen relative pb-24">
       {/* Page Header matching rccg-main layout */}
-      <div className="pt-12 pb-8 text-center bg-white border-b border-slate-100 shadow-sm mb-10">
+      <div className="pt-12 pb-8 text-center bg-white border-b border-slate-100 shadow-sm mb-10 relative">
+        <div className="absolute right-4 sm:right-8 top-1/2 transform -translate-y-1/2">
+          <button 
+            onClick={handleShare}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full shadow-sm hover:text-blue-600 hover:border-blue-200 transition"
+          >
+            <Share2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Share</span>
+          </button>
+        </div>
         <p className="text-xs font-semibold tracking-[0.2em] uppercase text-blue-600 mb-2">
           Daily Devotional
         </p>

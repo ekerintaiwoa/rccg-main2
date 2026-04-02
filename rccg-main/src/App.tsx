@@ -19,12 +19,41 @@ import { Tab } from './types';
 import { AuthProvider } from './AuthContext';
 
 export default function App() {
-  const [activeTab, setActiveTab] = React.useState<Tab>('home');
+  const [activeTab, setActiveTab] = React.useState<Tab>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab') as Tab;
+    const validTabs: Tab[] = ['home', 'events', 'sermons', 'give', 'about', 'contact', 'blog', 'devotional', 'library', 'gallery', 'prayer', 'bible'];
+    return validTabs.includes(tab) ? tab : 'home';
+  });
 
   // Scroll to top when tab changes
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, [activeTab]);
+
+  // Sync state to URL and handle browser back navigation
+  React.useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('tab') !== activeTab) {
+      url.searchParams.set('tab', activeTab);
+      window.history.pushState({}, '', url);
+    }
+  }, [activeTab]);
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab') as Tab;
+      const validTabs: Tab[] = ['home', 'events', 'sermons', 'give', 'about', 'contact', 'blog', 'devotional', 'library', 'gallery', 'prayer', 'bible'];
+      if (validTabs.includes(tab)) {
+        setActiveTab(tab);
+      } else {
+        setActiveTab('home');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const renderScreen = () => {
     switch (activeTab) {

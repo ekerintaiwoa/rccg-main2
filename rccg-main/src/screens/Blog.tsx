@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Share2 } from 'lucide-react';
 
 interface BlogPostApi {
   id: number;
@@ -12,7 +13,23 @@ interface BlogPostApi {
 
 export const Blog: React.FC = () => {
   const [posts, setPosts] = useState<BlogPostApi[]>([]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const postParam = params.get('post');
+    return postParam ? parseInt(postParam, 10) : null;
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (selectedId) {
+      params.set('post', selectedId.toString());
+    } else {
+      params.delete('post');
+    }
+    const url = new URL(window.location.href);
+    url.search = params.toString();
+    window.history.pushState({}, '', url);
+  }, [selectedId]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +47,7 @@ export const Blog: React.FC = () => {
         if (!isMounted) return;
         setPosts(data);
         if (data.length > 0) {
-          setSelectedId(data[0].id);
+          setSelectedId(prev => (prev === null ? data[0].id : prev));
         }
       } catch (err) {
         if (!isMounted) return;
@@ -112,7 +129,25 @@ export const Blog: React.FC = () => {
             </div>
 
             {selectedPost && (
-              <div className="max-w-3xl mx-auto text-left bg-white border border-slate-100 rounded-2xl shadow-sm p-8">
+              <div className="max-w-3xl mx-auto text-left bg-white border border-slate-100 rounded-2xl shadow-sm p-8 relative">
+                <button 
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: selectedPost.title,
+                        text: selectedPost.excerpt,
+                        url: window.location.href
+                      }).catch(console.error);
+                    } else {
+                      navigator.clipboard.writeText(window.location.href);
+                      alert('Link copied to clipboard!');
+                    }
+                  }}
+                  className="absolute right-4 sm:right-8 top-8 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition"
+                  title="Share Post"
+                >
+                  <Share2 className="w-5 h-5" />
+                </button>
                 <p className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-2">
                   {selectedPost.published_at ? formatDate(selectedPost.published_at) : ''}
                 </p>
