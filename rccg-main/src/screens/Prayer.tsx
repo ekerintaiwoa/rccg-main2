@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, Pause, ChevronRight, Type, Volume2, MessageSquare, Send } from 'lucide-react';
+import { Play, Pause, ChevronRight, Type, Volume2, MessageSquare, Send, Share2 } from 'lucide-react';
 import { DailyPrayer } from '../types';
 
 // Fallback mock data in case API is empty
@@ -170,8 +170,28 @@ export const Prayer: React.FC = () => {
             <div className="max-w-4xl mx-auto space-y-8">
 
                 {/* Header */}
-                <div className="text-center space-y-4">
-                    <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Daily Prayer Room</h1>
+                <div className="text-center space-y-4 relative">
+                    <div className="absolute right-4 sm:right-8 top-0">
+                        <button 
+                            onClick={() => {
+                                if (navigator.share) {
+                                    navigator.share({
+                                        title: 'Daily Prayer Room',
+                                        text: 'Join me in today\'s prayer',
+                                        url: window.location.href
+                                    }).catch(console.error);
+                                } else {
+                                    navigator.clipboard.writeText(window.location.href);
+                                    alert('Link copied to clipboard!');
+                                }
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full shadow-sm hover:text-blue-600 hover:border-blue-200 transition"
+                        >
+                            <Share2 className="w-4 h-4" />
+                            <span className="hidden sm:inline">Share</span>
+                        </button>
+                    </div>
+                    <h1 className="text-4xl font-bold text-slate-900 tracking-tight pt-2">Daily Prayer Room</h1>
                     <p className="text-lg text-slate-600 max-w-2xl mx-auto">
                         Take a moment to center yourself. Join us in our daily prayers and submit your own requests.
                     </p>

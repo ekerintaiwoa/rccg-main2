@@ -111,7 +111,8 @@ export const Give: React.FC = () => {
       is_anonymous: givingAs === 'anonymous',
       first_name: givingAs === 'guest' ? guestData.firstName : '',
       last_name: givingAs === 'guest' ? guestData.lastName : '',
-      email: givingAs === 'guest' ? guestData.email : ''
+      email: givingAs === 'guest' ? guestData.email : '',
+      reference_code: 'DUMMY-' + Math.random().toString(36).substring(7)
     };
 
     const headers: any = { 'Content-Type': 'application/json' };

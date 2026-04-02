@@ -6,10 +6,31 @@ import { Devotional } from '../components/open-heaven/types';
 import { fetchDevotional, formatDateForApi } from '../components/open-heaven/api';
 
 export const OpenHeaven: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const dateParam = params.get('date');
+    if (dateParam) {
+      const [year, month, day] = dateParam.split('-').map(Number);
+      if (year && month && day) {
+        return new Date(year, month - 1, day);
+      }
+    }
+    return new Date();
+  });
   const [devotional, setDevotional] = useState<Devotional | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const dateStr = formatDateForApi(selectedDate);
+    if (params.get('date') !== dateStr) {
+      params.set('date', dateStr);
+      const url = new URL(window.location.href);
+      url.search = params.toString();
+      window.history.pushState({}, '', url);
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -50,20 +71,22 @@ export const OpenHeaven: React.FC = () => {
   return (
     <section className="bg-slate-50 min-h-screen relative pb-24">
       {/* Page Header matching rccg-main layout */}
-      <div className="pt-12 pb-8 text-center bg-white border-b border-slate-100 shadow-sm mb-10 relative">
-        <div className="absolute right-4 sm:right-8 top-1/2 transform -translate-y-1/2">
-          <button 
-            onClick={handleShare}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full shadow-sm hover:text-blue-600 hover:border-blue-200 transition"
-          >
-            <Share2 className="w-4 h-4" />
-            <span className="hidden sm:inline">Share</span>
-          </button>
+      <div className="pt-12 pb-8 bg-white border-b border-slate-100 shadow-sm mb-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
+          <div className="absolute right-4 lg:right-8 top-1/2 transform -translate-y-1/2 z-10">
+            <button 
+              onClick={handleShare}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full shadow-sm hover:text-blue-600 hover:border-blue-200 transition bg-white/80 backdrop-blur"
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Share</span>
+            </button>
+          </div>
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-blue-600 mb-2">
+            Daily Devotional
+          </p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">Open Heaven</h1>
         </div>
-        <p className="text-xs font-semibold tracking-[0.2em] uppercase text-blue-600 mb-2">
-          Daily Devotional
-        </p>
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">Open Heaven</h1>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-10 items-start">
