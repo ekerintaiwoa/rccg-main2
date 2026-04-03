@@ -361,7 +361,7 @@ export const Give: React.FC = () => {
                 <Mail className="w-5 h-5 text-slate-400 shrink-0 mt-1" />
                 <div>
                   <p className="font-bold text-slate-900">Email Support</p>
-                  <p className="text-sm text-slate-500">Contact giving@gracecommunity.church for any assistance.</p>
+                  <p className="text-sm text-slate-500">Contact giving@rccglübeck.com for any assistance.</p>
                 </div>
               </div>
             </div>

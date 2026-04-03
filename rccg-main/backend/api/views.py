@@ -388,6 +388,7 @@ class GivingRecordViewSet(viewsets.ModelViewSet):
         
         if user.is_authenticated and not is_anonymous:
             serializer.save(user=user, reference_code=ref_code)
+        else:
             serializer.save(reference_code=ref_code)
 
 
