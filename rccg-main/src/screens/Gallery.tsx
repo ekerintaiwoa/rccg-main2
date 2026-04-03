@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import { motion, AnimatePresence } from 'motion/react';
 import { ImageIcon, Maximize2, X } from 'lucide-react';
 
@@ -10,7 +11,7 @@ export const Gallery: React.FC = () => {
     useEffect(() => {
         const fetchGallery = async () => {
             try {
-                const res = await fetch('http://127.0.0.1:8000/api/gallery/');
+                const res = await fetch(`${API_BASE_URL}/api/gallery/`);
                 if (res.ok) {
                     setImages(await res.json());
                 }

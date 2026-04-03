@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { API_BASE_URL } from '../config';
 import { Share2 } from 'lucide-react';
 
 interface BlogPostApi {
@@ -39,7 +40,7 @@ export const Blog: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('http://127.0.0.1:8000/api/blogs/');
+        const response = await fetch(`${API_BASE_URL}/api/blogs/`);
         if (!response.ok) {
           throw new Error('Failed to load blog posts');
         }

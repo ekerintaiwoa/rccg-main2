@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { API_BASE_URL } from '../config';
 import { useAuth } from '../AuthContext';
 import { Book as BookIcon, Headphones, HelpCircle, CheckCircle, Lock, Heart, X } from 'lucide-react';
 
@@ -19,11 +20,12 @@ export const Library: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                const token = localStorage.getItem('token');
                 const headers = token ? { 'Authorization': `Token ${token}` } : {};
                 const [booksRes, audiosRes, quizzesRes] = await Promise.all([
-                    fetch('http://127.0.0.1:8000/api/books/', { headers }),
-                    fetch('http://127.0.0.1:8000/api/audios/', { headers }),
-                    fetch('http://127.0.0.1:8000/api/quizzes/', { headers })
+                    fetch(`${API_BASE_URL}/api/books/`, { headers }),
+                    fetch(`${API_BASE_URL}/api/audios/`, { headers }),
+                    fetch(`${API_BASE_URL}/api/quizzes/`, { headers })
                 ]);
 
                 if (booksRes.ok) setBooks(await booksRes.json());
@@ -40,10 +42,9 @@ export const Library: React.FC = () => {
 
     const handleAuthSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setAuthError('');
         const endpoint = isLoginView ? 'login/' : 'register/';
         try {
-            const res = await fetch(`http://127.0.0.1:8000/api/${endpoint}`, {
+            const res = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(authForm)
@@ -63,7 +64,7 @@ export const Library: React.FC = () => {
     const submitBookAnswer = async (questionId: number, text: string) => {
         if (!token) return;
         try {
-            const res = await fetch('http://127.0.0.1:8000/api/submit-answer/', {
+            const res = await fetch(`${API_BASE_URL}/api/submit-answer/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

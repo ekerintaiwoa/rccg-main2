@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { API_BASE_URL } from '../config';
 import * as Icons from 'lucide-react';
 import { ShieldCheck, HelpCircle, Mail, DollarSign, X, Lock, CheckCircle, Clock } from 'lucide-react';
 import { useAuth } from '../AuthContext';
@@ -44,7 +45,7 @@ export const Give: React.FC = () => {
   useEffect(() => {
     const fetchPageData = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/online-giving/');
+        const res = await fetch(`${API_BASE_URL}/api/online-giving/`);
         if (res.ok) {
           const data = await res.json();
           setPageData(data);
@@ -62,7 +63,7 @@ export const Give: React.FC = () => {
   const fetchHistory = async () => {
     if (!token) return;
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/giving-records/', {
+      const res = await fetch(`${API_BASE_URL}/api/giving-records/`, {
         headers: { 'Authorization': `Token ${token}` }
       });
       if (res.ok) setHistoryRecords(await res.json());
@@ -80,7 +81,7 @@ export const Give: React.FC = () => {
     setAuthError('');
     const endpoint = isLoginView ? 'login/' : 'register/';
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/${endpoint}`, {
+      const res = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(authForm)
@@ -121,7 +122,7 @@ export const Give: React.FC = () => {
     }
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/giving-records/', {
+      const res = await fetch(`${API_BASE_URL}/api/giving-records/`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(payload)

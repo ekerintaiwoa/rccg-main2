@@ -1,6 +1,6 @@
 import { Devotional } from './types';
+import { API_BASE_URL } from '../../config';
 
-const BACKEND_BASE_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
 
 const FALLBACK_URL = 'https://corsproxy.io/?' + encodeURIComponent('https://www.openheavensdaily.com/feeds/posts/default?alt=json&max-results=30');
 
@@ -88,7 +88,7 @@ const parseDevotionalText = (rawMessage: string, title: string, date: string): D
 export async function fetchDevotional(date: string): Promise<Devotional | null> {
   try {
     // Prefer our backend proxy (server-side fetch avoids CORS/proxy blocks)
-    const backendRes = await fetch(`${BACKEND_BASE_URL}/api/open-heaven/?date=${encodeURIComponent(date)}`);
+    const backendRes = await fetch(`${API_BASE_URL}/api/open-heaven/?date=${encodeURIComponent(date)}`);
     if (backendRes.ok) {
       return (await backendRes.json()) as Devotional;
     }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import { API_BASE_URL } from '../config';
 import { Heart, BookOpen, Users2, Mail, Linkedin, History, Target, ShieldCheck } from 'lucide-react';
 
 export const About: React.FC = () => {
@@ -11,8 +12,8 @@ export const About: React.FC = () => {
     const fetchData = async () => {
       try {
         const [aboutRes, teamRes] = await Promise.all([
-          fetch('http://127.0.0.1:8000/api/about/'),
-          fetch('http://127.0.0.1:8000/api/team/')
+          fetch(`${API_BASE_URL}/api/about/`),
+          fetch(`${API_BASE_URL}/api/team/`)
         ]);
         if (aboutRes.ok) setPageData(await aboutRes.json());
         if (teamRes.ok) setTeamData(await teamRes.json());

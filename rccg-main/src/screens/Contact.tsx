@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { API_BASE_URL } from '../config';
 
 export const Contact: React.FC = () => {
   const [submitted, setSubmitted] = React.useState(false);
@@ -10,7 +11,7 @@ export const Contact: React.FC = () => {
   React.useEffect(() => {
     const fetchPageData = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/contact-info/');
+        const res = await fetch(`${API_BASE_URL}/api/contact-info/`);
         if (res.ok) {
           const data = await res.json();
           setPageData(data);
@@ -33,15 +34,17 @@ export const Contact: React.FC = () => {
     const payload = Object.fromEntries(formData.entries());
 
     try {
-      await fetch('http://127.0.0.1:8000/api/contact/', {
+      const response = await fetch(`${API_BASE_URL}/api/contact/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       });
-      setSubmitted(true);
-      event.currentTarget.reset();
+      if (response.ok) {
+        setSubmitted(true);
+        event.currentTarget.reset();
+      }
     } catch (error) {
       console.error('Failed to send message', error);
     } finally {

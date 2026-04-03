@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Play, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 import { EVENTS } from '../constants';
 import { Tab } from '../types';
 import hero from '../../hero.jpeg';
@@ -104,7 +105,7 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
   const resolveMediaUrl = (path?: string | null): string | null => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    return `http://127.0.0.1:8000${path}`;
+    return `${API_BASE_URL}${path}`;
   };
 
   React.useEffect(() => {
@@ -134,7 +135,7 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
   React.useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/events/');
+        const res = await fetch(`${API_BASE_URL}/api/events/`);
         if (!res.ok) {
           throw new Error('Failed to load events');
         }
@@ -148,7 +149,7 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
 
     const fetchHomeSections = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/home-sections/');
+        const res = await fetch(`${API_BASE_URL}/api/home-sections/`);
         if (res.ok) {
           const data = await res.json();
           setHomeSections(data);

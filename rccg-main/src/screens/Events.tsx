@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { API_BASE_URL } from '../config';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, X } from 'lucide-react';
 
 interface EventApi {
@@ -23,13 +24,13 @@ export const Events: React.FC = () => {
   const resolveMediaUrl = (path?: string | null): string | null => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    return `http://127.0.0.1:8000${path}`;
+    return `${API_BASE_URL}${path}`;
   };
 
   React.useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/events/');
+        const res = await fetch(`${API_BASE_URL}/api/events/`);
         if (!res.ok) {
           throw new Error('Failed to load events');
         }

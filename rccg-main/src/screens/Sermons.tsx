@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { API_BASE_URL } from '../config';
 import { Search, Play, Headphones, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SermonApi {
@@ -22,13 +23,13 @@ export const Sermons: React.FC = () => {
   const resolveMediaUrl = (path?: string | null): string | null => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    return `http://127.0.0.1:8000${path}`;
+    return `${API_BASE_URL}${path}`;
   };
 
   React.useEffect(() => {
     const fetchSermons = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/sermons/');
+        const res = await fetch(`${API_BASE_URL}/api/sermons/`);
         if (!res.ok) {
           throw new Error('Failed to load sermons');
         }

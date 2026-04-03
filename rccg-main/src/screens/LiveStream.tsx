@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Video, Clock, ArrowRight } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 import { motion } from 'motion/react';
 
 interface LiveStreamConfig {
@@ -62,7 +63,7 @@ export const LiveStream: React.FC = () => {
     const fetchConfig = async () => {
       try {
         // We use the production or proxy endpoint appropriately. (Assuming /api/ acts as a proxy via Vite)
-        const res = await fetch('http://127.0.0.1:8000/api/livestream/');
+        const res = await fetch(`${API_BASE_URL}/api/livestream/`);
         if (res.ok) {
           const data = await res.json();
           setConfig(data);
@@ -111,6 +112,11 @@ export const LiveStream: React.FC = () => {
         targetEnd.setFullYear(y, mm - 1, d);
         targetEnd.setHours(endH, endM, endS || 0, 0);
 
+        // If end time is <= start time, it logically means it ends at midnight or the next day
+        if (targetEnd.getTime() <= targetStart.getTime()) {
+          targetEnd.setDate(targetEnd.getDate() + 1);
+        }
+
         if (tzNow.getTime() < targetStart.getTime()) {
           mode = 'waiting';
         } else if (tzNow.getTime() >= targetStart.getTime() && tzNow.getTime() <= targetEnd.getTime()) {
@@ -128,6 +134,11 @@ export const LiveStream: React.FC = () => {
 
         targetEnd = new Date(tzNow);
         targetEnd.setHours(endH, endM, endS || 0, 0);
+
+        // If end time is <= start time, it logically means it ends at midnight or the next day
+        if (targetEnd.getTime() <= targetStart.getTime()) {
+          targetEnd.setDate(targetEnd.getDate() + 1);
+        }
 
         if (currentDay === targetDay) {
           if (tzNow.getTime() < targetStart.getTime()) {
