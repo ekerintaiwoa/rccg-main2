@@ -244,8 +244,11 @@ export const Events: React.FC = () => {
               })}
             </div>
           )}
-          <button className="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">
-            View All Upcoming Events
+          <button 
+            onClick={() => setShowOnlyUpcoming(!showOnlyUpcoming)}
+            className={`w-full py-4 font-bold rounded-xl transition-colors ${showOnlyUpcoming ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+          >
+            {showOnlyUpcoming ? 'View All Calendar Events' : 'View All Upcoming Events'}
           </button>
         </div>
       </div>
