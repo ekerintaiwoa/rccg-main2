@@ -17,6 +17,7 @@ interface EventApi {
   time: string;
   description: string;
   category: string;
+  is_upcoming: boolean;
   image_url: string | null;
   image_file?: string | null;
 }
@@ -140,7 +141,8 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
           throw new Error('Failed to load events');
         }
         const data = (await res.json()) as EventApi[];
-        setEvents(data);
+        const upcomingOnly = data.filter(e => e.is_upcoming);
+        setEvents(upcomingOnly);
       } catch (err) {
         console.error(err);
         setEventsError('Unable to load events. Showing default sample events.');

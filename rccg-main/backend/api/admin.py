@@ -14,9 +14,10 @@ from .models import (
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-	list_display = ("title", "date", "time", "category")
+	list_display = ("title", "date", "time", "category", "is_upcoming")
+	list_editable = ("is_upcoming",)
 	search_fields = ("title", "description", "category")
-	list_filter = ("category", "date")
+	list_filter = ("category", "date", "is_upcoming")
 
 
 @admin.register(Sermon)

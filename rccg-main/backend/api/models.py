@@ -46,6 +46,7 @@ class Event(TimeStampedModel):
 	time = models.CharField(max_length=50)
 	description = models.TextField()
 	category = models.CharField(max_length=50)
+	is_upcoming = models.BooleanField(default=False)
 	image_url = models.URLField(blank=True)
 	image_file = models.ImageField(
 		upload_to="events/",

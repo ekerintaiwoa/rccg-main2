@@ -10,6 +10,7 @@ interface EventApi {
   time: string;
   description: string;
   category: string;
+  is_upcoming: boolean;
   image_url: string | null;
   image_file?: string | null;
 }
@@ -20,6 +21,7 @@ export const Events: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = React.useState<number | null>(null);
   const [showDetailModal, setShowDetailModal] = React.useState(false);
+  const [showOnlyUpcoming, setShowOnlyUpcoming] = React.useState(false);
 
   const resolveMediaUrl = (path?: string | null): string | null => {
     if (!path) return null;
@@ -77,15 +79,35 @@ export const Events: React.FC = () => {
         {/* Calendar View */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 flex items-center justify-between border-b border-slate-100">
-              <h2 className="text-xl font-bold text-slate-900">{`${monthName} ${currentYear}`}</h2>
-              <div className="flex gap-2">
-                <button className="p-2 hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors">
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button className="p-2 hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors">
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+            <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">{`${monthName} ${currentYear}`}</h2>
+                <p className="text-xs text-slate-500 font-medium">Click on any event for details</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex bg-slate-100 p-1 rounded-xl">
+                  <button 
+                    onClick={() => setShowOnlyUpcoming(false)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${!showOnlyUpcoming ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    All
+                  </button>
+                  <button 
+                    onClick={() => setShowOnlyUpcoming(true)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${showOnlyUpcoming ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Upcoming
+                  </button>
+                </div>
+                <div className="h-8 w-[1px] bg-slate-200 mx-1 hidden sm:block"></div>
+                <div className="flex gap-2">
+                  <button className="p-2 hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors">
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button className="p-2 hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors">
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
             
@@ -106,7 +128,11 @@ export const Events: React.FC = () => {
                 // Filter events matching this specific year, month, and day
                 const dayEvents = events.filter((e) => {
                   const ed = new Date(e.date);
-                  return ed.getFullYear() === currentYear && ed.getMonth() === currentMonth && ed.getDate() === day;
+                  const matchesDate = ed.getFullYear() === currentYear && ed.getMonth() === currentMonth && ed.getDate() === day;
+                  if (showOnlyUpcoming) {
+                    return matchesDate && e.is_upcoming;
+                  }
+                  return matchesDate;
                 });
                 
                 return (
@@ -159,7 +185,9 @@ export const Events: React.FC = () => {
 
           {!loading && !error && events.length > 0 && (
             <div className="space-y-4">
-              {events.map((event) => {
+              {events
+                .filter((e) => !showOnlyUpcoming || e.is_upcoming)
+                .map((event) => {
                 const dateObj = new Date(event.date);
                 const month = dateObj.toLocaleString('en-US', { month: 'short' }).toUpperCase();
                 const day = dateObj.getDate();
