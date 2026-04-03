@@ -23,13 +23,13 @@ export const Events: React.FC = () => {
   const resolveMediaUrl = (path?: string | null): string | null => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    return `https://backend-production-f755.up.railway.app${path}`;
+    return `http://127.0.0.1:8000${path}`;
   };
 
   React.useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch('https://backend-production-f755.up.railway.app/api/events/');
+        const res = await fetch('http://127.0.0.1:8000/api/events/');
         if (!res.ok) {
           throw new Error('Failed to load events');
         }
@@ -46,7 +46,13 @@ export const Events: React.FC = () => {
     fetchEvents();
   }, []);
 
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  const monthName = today.toLocaleString('default', { month: 'long' });
+  const numDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const days = Array.from({ length: numDays }, (_, i) => i + 1);
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
   const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
   const selectedEvent = React.useMemo(
@@ -71,7 +77,7 @@ export const Events: React.FC = () => {
         <div className="lg:col-span-2">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 flex items-center justify-between border-b border-slate-100">
-              <h2 className="text-xl font-bold text-slate-900">October 2023</h2>
+              <h2 className="text-xl font-bold text-slate-900">{`${monthName} ${currentYear}`}</h2>
               <div className="flex gap-2">
                 <button className="p-2 hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors">
                   <ChevronLeft className="w-5 h-5" />
@@ -89,27 +95,47 @@ export const Events: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-7 gap-px bg-slate-200">
+              {/* Empty slots for days before the 1st of the month */}
+              {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                <div key={`empty-${i}`} className="min-h-[120px] bg-slate-50 p-2 opacity-30" />
+              ))}
+              
               {days.map(day => {
-                const hasEvent = [1, 4, 8, 11, 12, 15, 18].includes(day);
-                const isToday = day === 12;
+                const isToday = day === today.getDate();
+                // Filter events matching this specific year, month, and day
+                const dayEvents = events.filter((e) => {
+                  const ed = new Date(e.date);
+                  return ed.getFullYear() === currentYear && ed.getMonth() === currentMonth && ed.getDate() === day;
+                });
                 
                 return (
                   <div key={day} className={`min-h-[120px] bg-white p-2 transition-colors hover:bg-slate-50 ${isToday ? 'ring-2 ring-blue-600 ring-inset' : ''}`}>
                     <span className={`text-sm font-medium ${isToday ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>{day}</span>
                     <div className="mt-2 space-y-1">
-                      {day === 1 && <div className="text-[10px] bg-blue-50 text-blue-600 p-1 rounded font-bold truncate">Worship Service</div>}
-                      {[4, 11, 18].includes(day) && <div className="text-[10px] bg-orange-50 text-orange-600 p-1 rounded font-bold truncate">Youth Night</div>}
-                      {day === 12 && <div className="text-[10px] bg-green-50 text-green-700 p-1 rounded font-bold truncate">Small Group</div>}
-                      {day === 8 && <div className="text-[10px] bg-blue-50 text-blue-600 p-1 rounded font-bold truncate">Worship Service</div>}
-                      {day === 15 && <div className="text-[10px] bg-blue-50 text-blue-600 p-1 rounded font-bold truncate">Worship Service</div>}
+                      {dayEvents.map(event => {
+                        const badgeClasses =
+                          event.category === 'worship' ? 'bg-blue-50 text-blue-600'
+                          : event.category === 'youth' ? 'bg-orange-50 text-orange-600'
+                          : event.category === 'small-group' || event.category === 'groups' ? 'bg-green-50 text-green-700'
+                          : 'bg-purple-50 text-purple-600';
+                          
+                        return (
+                          <div key={event.id} onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEventId(event.id);
+                            setShowDetailModal(true);
+                          }} className={`text-[10px] p-1 rounded font-bold truncate cursor-pointer hover:opacity-80 ${badgeClasses}`}>
+                            {event.title}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
               })}
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={`next-${i}`} className="min-h-[120px] bg-slate-50 p-2 opacity-30">
-                  <span className="text-sm font-medium text-slate-400">{i + 1}</span>
-                </div>
+              {/* Optional: Add trailing empty boxes to complete the 7xN grid */}
+              {Array.from({ length: (7 - ((firstDayOfMonth + numDays) % 7)) % 7 }).map((_, i) => (
+                <div key={`next-empty-${i}`} className="min-h-[120px] bg-slate-50 p-2 opacity-30" />
               ))}
             </div>
           </div>

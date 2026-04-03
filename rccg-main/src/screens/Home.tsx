@@ -104,7 +104,7 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
   const resolveMediaUrl = (path?: string | null): string | null => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    return `https://backend-production-f755.up.railway.app${path}`;
+    return `http://127.0.0.1:8000${path}`;
   };
 
   React.useEffect(() => {
@@ -134,7 +134,7 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
   React.useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch('https://backend-production-f755.up.railway.app/api/events/');
+        const res = await fetch('http://127.0.0.1:8000/api/events/');
         if (!res.ok) {
           throw new Error('Failed to load events');
         }
@@ -148,7 +148,7 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
 
     const fetchHomeSections = async () => {
       try {
-        const res = await fetch('https://backend-production-f755.up.railway.app/api/home-sections/');
+        const res = await fetch('http://127.0.0.1:8000/api/home-sections/');
         if (res.ok) {
           const data = await res.json();
           setHomeSections(data);
@@ -417,55 +417,49 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
             </button>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {(events.length > 0 ? events.slice(0, 3) : EVENTS.slice(0, 3)).map((event, index) => {
-              const isApiEvent = (event as any).image_url !== undefined;
-              const title = isApiEvent ? (event as any).title : EVENTS[index].title;
-              const description = isApiEvent ? (event as any).description : EVENTS[index].description;
-              const time = isApiEvent ? (event as any).time : EVENTS[index].time;
-              const dateStr = isApiEvent ? (event as any).date : EVENTS[index].date;
+            {events.length === 0 ? (
+              <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-slate-100">
+                <p className="text-slate-500 font-medium text-lg">No upcoming events scheduled right now.</p>
+                <p className="text-slate-400 text-sm mt-1">Please check back later.</p>
+              </div>
+            ) : (
+              events.slice(0, 3).map((event) => {
+                const dateObj = new Date(event.date);
+                const month = dateObj.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+                const day = dateObj.getDate();
+                const dateLabel = `${month} ${day}`;
+                
+                const imageSrc = resolveMediaUrl(event.image_file) || resolveMediaUrl(event.image_url) || 'https://images.unsplash.com/photo-1438032005730-c779502df39b?auto=format&fit=crop&w=800&q=80';
 
-              let dateLabel = dateStr;
-              if (isApiEvent) {
-                const d = new Date(dateStr);
-                const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-                const day = d.getDate();
-                dateLabel = `${month} ${day}`;
-              }
-
-              const imageSrc = isApiEvent
-                ? resolveMediaUrl((event as any).image_file) ||
-                resolveMediaUrl((event as any).image_url) ||
-                EVENTS[index]?.image
-                : (event as any).image;
-
-              return (
-                <div
-                  key={isApiEvent ? (event as any).id : event.id}
-                  className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
-                >
-                  <div className="h-48 overflow-hidden">
-                    <img
-                      src={imageSrc}
-                      alt={title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="p-6">
-                    <div className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">
-                      {dateLabel} • {time}
+                return (
+                  <div
+                    key={event.id}
+                    className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
+                  >
+                    <div className="h-48 overflow-hidden">
+                      <img
+                        src={imageSrc}
+                        alt={event.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
                     </div>
-                    <h3 className="text-xl font-bold mb-3 text-slate-800">{title}</h3>
-                    <p className="text-slate-600 text-sm mb-4 line-clamp-2">{description}</p>
-                    <button
-                      onClick={() => setActiveTab('events')}
-                      className="text-blue-600 font-medium text-sm hover:underline"
-                    >
-                      Learn more
-                    </button>
+                    <div className="p-6">
+                      <div className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">
+                        {dateLabel} • {event.time}
+                      </div>
+                      <h3 className="text-xl font-bold mb-3 text-slate-800">{event.title}</h3>
+                      <p className="text-slate-600 text-sm mb-4 line-clamp-2">{event.description}</p>
+                      <button
+                        onClick={() => setActiveTab('events')}
+                        className="text-blue-600 font-medium text-sm hover:underline"
+                      >
+                        Learn more
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </section>

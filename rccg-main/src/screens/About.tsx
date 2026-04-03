@@ -11,8 +11,8 @@ export const About: React.FC = () => {
     const fetchData = async () => {
       try {
         const [aboutRes, teamRes] = await Promise.all([
-          fetch('https://backend-production-f755.up.railway.app/api/about/'),
-          fetch('https://backend-production-f755.up.railway.app/api/team/')
+          fetch('http://127.0.0.1:8000/api/about/'),
+          fetch('http://127.0.0.1:8000/api/team/')
         ]);
         if (aboutRes.ok) setPageData(await aboutRes.json());
         if (teamRes.ok) setTeamData(await teamRes.json());

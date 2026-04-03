@@ -58,7 +58,7 @@ export const LiveStream: React.FC = () => {
     const fetchConfig = async () => {
       try {
         // We use the production or proxy endpoint appropriately. (Assuming /api/ acts as a proxy via Vite)
-        const res = await fetch('https://backend-production-f755.up.railway.app/api/livestream/');
+        const res = await fetch('http://127.0.0.1:8000/api/livestream/');
         if (res.ok) {
           const data = await res.json();
           setConfig(data);

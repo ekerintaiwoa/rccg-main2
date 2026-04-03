@@ -1,5 +1,6 @@
 import React from 'react';
-import { Cross, Mail, Phone, MapPin, Facebook, Instagram, Youtube } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Instagram, Youtube } from 'lucide-react';
+import logo from '../../logo.png';
 
 export const Footer: React.FC = () => {
   return (
@@ -8,9 +9,7 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-6 text-white">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Cross className="w-5 h-5 text-white" />
-              </div>
+              <img src={logo} alt="RCCG Logo" className="w-10 h-10 object-contain" />
               <span className="text-lg font-bold">RCCG Lübeck</span>
             </div>
             <p className="max-w-xs mb-8">
@@ -28,11 +27,11 @@ export const Footer: React.FC = () => {
             <ul className="space-y-4 text-sm">
               <li className="flex items-center gap-3">
                 <MapPin className="w-4 h-4 text-blue-500" />
-                123 Faith Lane, City, ST
+                Wesleystraße 14-15 23556 Lübeck
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-blue-500" />
-                (555) 123-4567
+                01786365757
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-blue-500" />

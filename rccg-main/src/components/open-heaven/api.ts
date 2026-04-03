@@ -1,6 +1,6 @@
 import { Devotional } from './types';
 
-const BACKEND_BASE_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'https://backend-production-f755.up.railway.app';
+const BACKEND_BASE_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
 
 const FALLBACK_URL = 'https://corsproxy.io/?' + encodeURIComponent('https://www.openheavensdaily.com/feeds/posts/default?alt=json&max-results=30');
 

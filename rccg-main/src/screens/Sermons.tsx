@@ -22,13 +22,13 @@ export const Sermons: React.FC = () => {
   const resolveMediaUrl = (path?: string | null): string | null => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    return `https://backend-production-f755.up.railway.app${path}`;
+    return `http://127.0.0.1:8000${path}`;
   };
 
   React.useEffect(() => {
     const fetchSermons = async () => {
       try {
-        const res = await fetch('https://backend-production-f755.up.railway.app/api/sermons/');
+        const res = await fetch('http://127.0.0.1:8000/api/sermons/');
         if (!res.ok) {
           throw new Error('Failed to load sermons');
         }
