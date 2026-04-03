@@ -559,6 +559,8 @@ class LiveStreamSettings(TimeStampedModel):
 	service_day = models.CharField(max_length=20, default="Sunday")
 	start_time = models.TimeField(default="10:00:00")
 	end_time = models.TimeField(default="12:00:00")
+	service_date = models.DateField(null=True, blank=True, help_text="Specific date for the stream. If set, this overrides the recurring service day.")
+	is_recurring = models.BooleanField(default=True, help_text="If checked, uses the recurring 'Service Day'. If unchecked, it will use the specific 'Service Date'.")
 	timezone = models.CharField(max_length=50, default="Europe/Berlin")
 
 	class Meta:

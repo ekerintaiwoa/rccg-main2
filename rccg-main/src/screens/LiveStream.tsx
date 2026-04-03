@@ -9,6 +9,8 @@ interface LiveStreamConfig {
   start_time: string;
   end_time: string;
   timezone: string;
+  service_date?: string | null;
+  is_recurring: boolean;
 }
 
 const DEFAULT_CONFIG: LiveStreamConfig = {
@@ -17,7 +19,9 @@ const DEFAULT_CONFIG: LiveStreamConfig = {
   service_day: "Sunday",
   start_time: "10:00:00",
   end_time: "12:00:00",
-  timezone: "Europe/Berlin"
+  timezone: "Europe/Berlin",
+  service_date: null,
+  is_recurring: true
 };
 
 const DAYS_MAP: Record<string, number> = {
@@ -83,46 +87,67 @@ export const LiveStream: React.FC = () => {
       const tzStr = now.toLocaleString('en-US', { timeZone: config.timezone });
       const tzNow = new Date(tzStr);
 
-      const targetDay = DAYS_MAP[config.service_day] ?? 0;
       const [startH, startM, startS] = config.start_time.split(':').map(Number);
       const [endH, endM, endS] = config.end_time.split(':').map(Number);
 
-      const currentDay = tzNow.getDay();
-      
-      // Create date objects for today's start and end events
-      const targetStart = new Date(tzNow);
-      targetStart.setHours(startH, startM, startS || 0, 0);
-
-      const targetEnd = new Date(tzNow);
-      targetEnd.setHours(endH, endM, endS || 0, 0);
-
+      let targetStart: Date;
+      let targetEnd: Date;
       let mode: 'waiting' | 'live' | 'ended' = 'waiting';
-      let nextServiceStart = new Date(targetStart);
 
-      if (currentDay === targetDay) {
+      if (!config.is_recurring && config.service_date) {
+        // One-off specific date
+        targetStart = new Date(`${config.service_date}T${config.start_time}`);
+        targetEnd = new Date(`${config.service_date}T${config.end_time}`);
+        
+        // Adjust for timezone - since we are comparing against tzNow (which is wall-clock in target TZ)
+        // we can just treat the parsed Date as being in that same "local" frame if we are careful.
+        // Actually, simpler to just use wall-clock comparison if we use tzNow.
+        const [y, mm, d] = config.service_date.split('-').map(Number);
+        targetStart = new Date(tzNow);
+        targetStart.setFullYear(y, mm - 1, d);
+        targetStart.setHours(startH, startM, startS || 0, 0);
+
+        targetEnd = new Date(tzNow);
+        targetEnd.setFullYear(y, mm - 1, d);
+        targetEnd.setHours(endH, endM, endS || 0, 0);
+
         if (tzNow.getTime() < targetStart.getTime()) {
-          // It's Sunday morning, before service
           mode = 'waiting';
         } else if (tzNow.getTime() >= targetStart.getTime() && tzNow.getTime() <= targetEnd.getTime()) {
-          // Inside the service window!
           mode = 'live';
         } else {
-          // After service ended today.
           mode = 'ended';
-          // Next service is 7 days away
-          nextServiceStart.setDate(nextServiceStart.getDate() + 7);
         }
       } else {
-        // Not the service day. Calculate days until next service day.
-        mode = 'waiting';
-        let daysUntil = (targetDay - currentDay + 7) % 7;
-        nextServiceStart.setDate(nextServiceStart.getDate() + daysUntil);
+        // Recurring weekly logic
+        const targetDay = DAYS_MAP[config.service_day] ?? 0;
+        const currentDay = tzNow.getDay();
+        
+        targetStart = new Date(tzNow);
+        targetStart.setHours(startH, startM, startS || 0, 0);
+
+        targetEnd = new Date(tzNow);
+        targetEnd.setHours(endH, endM, endS || 0, 0);
+
+        if (currentDay === targetDay) {
+          if (tzNow.getTime() < targetStart.getTime()) {
+            mode = 'waiting';
+          } else if (tzNow.getTime() >= targetStart.getTime() && tzNow.getTime() <= targetEnd.getTime()) {
+            mode = 'live';
+          } else {
+            mode = 'ended';
+            targetStart.setDate(targetStart.getDate() + 7);
+          }
+        } else {
+          mode = 'waiting';
+          let daysUntil = (targetDay - currentDay + 7) % 7;
+          targetStart.setDate(targetStart.getDate() + daysUntil);
+        }
       }
 
       setStatus(mode);
 
-      // Diff calculation in MS (using artificial wall-clock diff is safe for display)
-      const diffMs = nextServiceStart.getTime() - tzNow.getTime();
+      const diffMs = targetStart.getTime() - tzNow.getTime();
 
       if (diffMs > 0 && mode !== 'live') {
         const d = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -166,7 +191,7 @@ export const LiveStream: React.FC = () => {
           </div>
           <h1 className="text-4xl lg:text-5xl font-extrabold text-[#00264A] tracking-tight">{config.title}</h1>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto font-medium">
-            Join us locally or globally. Tune in every {config.service_day} starting at {config.start_time.slice(0, 5)} (Berlin time).
+            Join us locally or globally. Tune in {config.is_recurring ? `every ${config.service_day}` : `on ${config.service_date ? new Date(config.service_date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'the scheduled day'}`} starting at {config.start_time.slice(0, 5)} (Berlin time).
           </p>
         </div>
 

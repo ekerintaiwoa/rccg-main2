@@ -1,4 +1,13 @@
 Username: admin
 Password (temporary): V7k!p3Bq9@Lm2#Rz5TnQ
+
+The backend development server is running locally at: http://127.0.0.1:8000/
+
+You can access the Django admin panel at: http://127.0.0.1:8000/admin/
+
+Based on the 
+
+create_superuser.py
+ script in the backend directory, you can log in
 Email: admin@rccg.local
 To log in, open your backend admin at https://backend-production-f755.up.railway.app/admin/ (or whatever your backend Railway URL is) and sign in with the credentials above.
