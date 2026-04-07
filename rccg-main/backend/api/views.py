@@ -81,6 +81,22 @@ def _extract_blogger_post_body(post_html: str) -> str:
     return post_html
 
 
+def _extract_rccgonline_post_body(post_html: str) -> str:
+    """Extract the main article body from an rccgonline.org WordPress post page."""
+    import re
+
+    # Try the standard WordPress/Gutenberg entry-content div first.
+    for pattern in [
+        r'<div[^>]+class=["\'][^"\']*entry-content[^"\']*["\'][^>]*>([\s\S]*?)</div>\s*</article',
+        r'<div[^>]+class=["\'][^"\']*entry-content[^"\']*["\'][^>]*>([\s\S]*?)</div>\s*<(?:div|footer|aside)',
+        r'<article[^>]*>([\s\S]*?)</article>',
+    ]:
+        match = re.search(pattern, post_html, flags=re.IGNORECASE)
+        if match:
+            return match.group(1)
+    return post_html
+
+
 def _parse_openheavens_text(raw_text: str, title: str, date_str: str) -> dict:
     import re
 
@@ -159,22 +175,49 @@ class OpenHeavenView(APIView):
         if not date_str:
             date_str = timezone.localdate().isoformat()
 
-        feed_url = "https://www.openheavensdaily.com/feeds/posts/default?alt=json&max-results=60"
+        try:
+            target_date = datetime.date.fromisoformat(date_str)
+        except ValueError:
+            return Response({"detail": "Invalid date format. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Fetch Open Heaven posts from the RCCG Online WordPress REST API.
+        # We request posts published within a ±2-day window around the target date
+        # to account for timezone differences and early-publishing, then match by
+        # title (preferred) or post date (fallback) — same strategy as before.
+        after_date = (target_date - datetime.timedelta(days=1)).isoformat()
+        before_date = (target_date + datetime.timedelta(days=2)).isoformat()
+        feed_url = (
+            "https://rccgonline.org/wp-json/wp/v2/posts"
+            f"?after={after_date}T00:00:00&before={before_date}T00:00:00"
+            "&per_page=10&orderby=date&order=desc"
+            "&categories_exclude=&search=open+heaven"
+        )
+
         try:
             feed_raw = _http_get(feed_url)
-            feed = json.loads(feed_raw)
-            entries = feed.get("feed", {}).get("entry", [])
+            entries = json.loads(feed_raw)
+            if not isinstance(entries, list):
+                entries = []
+
+            # If the windowed query returned nothing, fall back to a broader search
+            # (last 20 Open Heaven posts) so we can still do a title-based match.
+            if not entries:
+                fallback_url = (
+                    "https://rccgonline.org/wp-json/wp/v2/posts"
+                    "?per_page=20&orderby=date&order=desc&search=open+heaven"
+                )
+                feed_raw = _http_get(fallback_url)
+                entries = json.loads(feed_raw)
+                if not isinstance(entries, list):
+                    entries = []
+
             if not entries:
                 return Response({"detail": "No feed entries"}, status=status.HTTP_502_BAD_GATEWAY)
 
-            # Match by the date embedded in the post title.
-            # OpenHeavens often publishes the post a day early, so timestamps can be misleading.
-            target_entry = None
-            try:
-                target_date = datetime.date.fromisoformat(date_str)
-            except ValueError:
-                return Response({"detail": "Invalid date format. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
-
+            # --- Title-based date matching (preferred) ---
+            # RCCG Online post titles follow patterns like:
+            #   "Open Heaven 1 April 2025 – Topic Here"
+            #   "Open Heaven April 1st 2025 | Topic"
             month_name = target_date.strftime("%B").lower()
             month_abbrev = target_date.strftime("%b").lower()
             month_candidates = {month_name, month_abbrev}
@@ -182,25 +225,29 @@ class OpenHeavenView(APIView):
                 month_candidates.add("sept")
             year_str = str(target_date.year)
             day_num = target_date.day
-            # Use real word boundaries (\b). Accept optional leading zero and ordinal suffix.
+            # Accept optional leading zero and ordinal suffix (1st, 2nd, 3rd, 4th…).
             day_re = re.compile(rf"\b0?{day_num}(st|nd|rd|th)?\b", re.IGNORECASE)
 
+            target_entry = None
             for entry in entries:
-                title_text = ((entry.get("title", {}) or {}).get("$t", "") or "").lower()
-                # Order-agnostic match: title must include month + year and contain the day number.
-                # This covers both "APRIL 1st 2026" and "1 APRIL 2026".
-                if any(m in title_text for m in month_candidates) and year_str in title_text and day_re.search(title_text):
+                # WordPress REST API: title is {"rendered": "..."} 
+                title_rendered = (entry.get("title") or {}).get("rendered", "") or ""
+                title_text = title_rendered.lower()
+                # Order-agnostic match: title must contain month + year + day number.
+                if (
+                    any(m in title_text for m in month_candidates)
+                    and year_str in title_text
+                    and day_re.search(title_text)
+                ):
                     target_entry = entry
                     break
 
-            # Fallback: match by published/updated timestamp date.
-            # Note: this can be off by 1 day because posts are sometimes published early,
-            # so we only use it if no title match was found.
+            # --- Fallback: match by the post's published date field ---
             if not target_entry:
                 for entry in entries:
-                    published = (entry.get("published", {}) or {}).get("$t", "")
-                    updated = (entry.get("updated", {}) or {}).get("$t", "")
-                    stamp = published or updated
+                    # WordPress REST API: "date" is "2025-04-01T06:00:00" (local) or
+                    # "date_gmt" is the UTC equivalent.
+                    stamp = entry.get("date") or entry.get("date_gmt") or ""
                     if stamp.startswith(date_str):
                         target_entry = entry
                         break
@@ -208,18 +255,22 @@ class OpenHeavenView(APIView):
             if not target_entry:
                 return Response({"detail": "Devotional not found for date"}, status=status.HTTP_404_NOT_FOUND)
 
-            title = (target_entry.get("title", {}) or {}).get("$t", "")
-            links = target_entry.get("link", []) or []
-            post_href = None
-            for link in links:
-                if link.get("rel") == "alternate":
-                    post_href = link.get("href")
-                    break
+            # WordPress REST API: title and content are {"rendered": "..."} dicts.
+            title = (target_entry.get("title") or {}).get("rendered", "") or ""
+            post_href = target_entry.get("link") or ""
 
-            raw_html = (target_entry.get("content", {}) or {}).get("$t") or (target_entry.get("summary", {}) or {}).get("$t") or ""
-            if post_href:
+            # Prefer the full rendered content; fall back to excerpt.
+            raw_html = (
+                (target_entry.get("content") or {}).get("rendered")
+                or (target_entry.get("excerpt") or {}).get("rendered")
+                or ""
+            )
+
+            # If the REST API returned a truncated excerpt, fetch the full post page
+            # and extract the article body directly from the HTML.
+            if post_href and (not raw_html or len(raw_html) < 200):
                 post_html = _http_get(post_href)
-                raw_html = _extract_blogger_post_body(post_html)
+                raw_html = _extract_rccgonline_post_body(post_html) or raw_html
 
             text = _strip_html_to_text(raw_html)
             devotional = _parse_openheavens_text(text, title, date_str)
