@@ -168,134 +168,30 @@ class OpenHeavenView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, *args, **kwargs):
-        import json
-        import re
-        import datetime
-
         date_str = request.query_params.get("date")
         if not date_str:
             date_str = timezone.localdate().isoformat()
 
-        # Priority 1: manually-entered devotional from the database
         try:
-            manual = OpenHeavenDevotional.objects.get(date=date_str, is_active=True)
-            return Response({
-                "title": manual.title,
-                "date": date_str,
-                "topic": "",
-                "bible_reading": manual.bible_reading,
-                "memory_verse": manual.memory_verse,
-                "memory_verse_text": manual.memory_verse_text,
-                "content": [p.strip() for p in manual.content.split("\n\n") if p.strip()],
-                "prayer_point": manual.prayer_point,
-                "hymn": manual.hymn,
-                "reflection": None,
-            })
+            entry = OpenHeavenDevotional.objects.get(date=date_str, is_active=True)
         except OpenHeavenDevotional.DoesNotExist:
-            pass  # Fall through to scraping
-
-        try:
-            target_date = datetime.date.fromisoformat(date_str)
-        except ValueError:
-            return Response({"detail": "Invalid date format. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Priority 2: scrape from rccgonline.org WordPress REST API.
-        # Request posts in a ±2-day window then match by title (preferred) or date (fallback).
-        after_date = (target_date - datetime.timedelta(days=1)).isoformat()
-        before_date = (target_date + datetime.timedelta(days=2)).isoformat()
-        feed_url = (
-            "https://rccgonline.org/wp-json/wp/v2/posts"
-            f"?after={after_date}T00:00:00&before={before_date}T00:00:00"
-            "&per_page=10&orderby=date&order=desc"
-            "&categories_exclude=&search=open+heaven"
-        )
-
-        try:
-            feed_raw = _http_get(feed_url)
-            entries = json.loads(feed_raw)
-            if not isinstance(entries, list):
-                entries = []
-
-            # If the windowed query returned nothing, fall back to a broader search
-            # (last 20 Open Heaven posts) so we can still do a title-based match.
-            if not entries:
-                fallback_url = (
-                    "https://rccgonline.org/wp-json/wp/v2/posts"
-                    "?per_page=20&orderby=date&order=desc&search=open+heaven"
-                )
-                feed_raw = _http_get(fallback_url)
-                entries = json.loads(feed_raw)
-                if not isinstance(entries, list):
-                    entries = []
-
-            if not entries:
-                return Response({"detail": "No feed entries"}, status=status.HTTP_502_BAD_GATEWAY)
-
-            # --- Title-based date matching (preferred) ---
-            # RCCG Online post titles follow patterns like:
-            #   "Open Heaven 1 April 2025 – Topic Here"
-            #   "Open Heaven April 1st 2025 | Topic"
-            month_name = target_date.strftime("%B").lower()
-            month_abbrev = target_date.strftime("%b").lower()
-            month_candidates = {month_name, month_abbrev}
-            if month_abbrev == "sep":
-                month_candidates.add("sept")
-            year_str = str(target_date.year)
-            day_num = target_date.day
-            # Accept optional leading zero and ordinal suffix (1st, 2nd, 3rd, 4th…).
-            day_re = re.compile(rf"\b0?{day_num}(st|nd|rd|th)?\b", re.IGNORECASE)
-
-            target_entry = None
-            for entry in entries:
-                # WordPress REST API: title is {"rendered": "..."} 
-                title_rendered = (entry.get("title") or {}).get("rendered", "") or ""
-                title_text = title_rendered.lower()
-                # Order-agnostic match: title must contain month + year + day number.
-                if (
-                    any(m in title_text for m in month_candidates)
-                    and year_str in title_text
-                    and day_re.search(title_text)
-                ):
-                    target_entry = entry
-                    break
-
-            # --- Fallback: match by the post's published date field ---
-            if not target_entry:
-                for entry in entries:
-                    # WordPress REST API: "date" is "2025-04-01T06:00:00" (local) or
-                    # "date_gmt" is the UTC equivalent.
-                    stamp = entry.get("date") or entry.get("date_gmt") or ""
-                    if stamp.startswith(date_str):
-                        target_entry = entry
-                        break
-
-            if not target_entry:
-                return Response({"detail": "Devotional not found for date"}, status=status.HTTP_404_NOT_FOUND)
-
-            # WordPress REST API: title and content are {"rendered": "..."} dicts.
-            title = (target_entry.get("title") or {}).get("rendered", "") or ""
-            post_href = target_entry.get("link") or ""
-
-            # Prefer the full rendered content from the REST API; fall back to excerpt.
-            raw_html = (
-                (target_entry.get("content") or {}).get("rendered")
-                or (target_entry.get("excerpt") or {}).get("rendered")
-                or ""
+            return Response(
+                {"detail": "No devotional has been posted for this date yet. Please check back later."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
-            # If the content is truncated/empty, fetch the full post page and parse the article body.
-            if post_href and (not raw_html or len(raw_html) < 200):
-                try:
-                    post_html = _http_get(post_href, timeout_seconds=8)
-                    raw_html = _extract_rccgonline_post_body(post_html) or raw_html
-                except Exception:
-                    pass  # Fall back to whatever raw_html we already have
-
-            text = _strip_html_to_text(raw_html)
-            devotional = _parse_openheavens_text(text, title, date_str)
-            return Response(devotional)
-        except Exception as exc:
-            return Response({"detail": "Failed to fetch devotional", "error": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response({
+            "title": entry.title,
+            "date": date_str,
+            "topic": "",
+            "bible_reading": entry.bible_reading,
+            "memory_verse": entry.memory_verse,
+            "memory_verse_text": entry.memory_verse_text,
+            "content": [p.strip() for p in entry.content.split("\n\n") if p.strip()],
+            "prayer_point": entry.prayer_point,
+            "hymn": entry.hymn,
+            "reflection": None,
+        })
 
 
 class EventViewSet(viewsets.ModelViewSet):
