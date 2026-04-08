@@ -576,3 +576,31 @@ class LiveStreamSettings(TimeStampedModel):
 		super().save(*args, **kwargs)
 
 
+class OpenHeavenDevotional(TimeStampedModel):
+    """Manually-entered Open Heaven devotional. Takes priority over the scraper when is_active=True."""
+    date = models.DateField(unique=True)
+    title = models.CharField(max_length=300)
+    bible_reading = models.CharField(max_length=200, blank=True,
+        help_text="e.g. Psalm 23:1-6")
+    memory_verse = models.CharField(max_length=200, blank=True,
+        help_text="Scripture reference, e.g. John 3:16")
+    memory_verse_text = models.TextField(blank=True,
+        help_text="Full text of the memory verse")
+    content = models.TextField(
+        help_text="Paste the full devotional message here. Separate paragraphs with a blank line.")
+    prayer_point = models.TextField(blank=True,
+        help_text="Prayer points / action points")
+    hymn = models.TextField(blank=True,
+        help_text="Hymn of the day (optional)")
+    is_active = models.BooleanField(default=True,
+        help_text="When active, this entry overrides the auto-scraped content for this date.")
+
+    class Meta:
+        ordering = ["-date"]
+        verbose_name = "Open Heaven Devotional (Manual)"
+        verbose_name_plural = "Open Heaven Devotionals (Manual)"
+
+    def __str__(self):
+        return f"{self.date} \u2014 {self.title}"
+
+

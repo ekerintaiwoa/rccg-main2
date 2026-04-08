@@ -9,7 +9,7 @@ from .models import (
     DailyPrayer, PrayerPointItem, PrayerRequest,
     HomeSection, HomeSectionBullet,
     OnlineGivingPage, GivingPurpose, GivingRecord,
-    LiveStreamSettings
+    LiveStreamSettings, OpenHeavenDevotional
 )
 
 @admin.register(Event)
@@ -203,3 +203,27 @@ class LiveStreamSettingsAdmin(admin.ModelAdmin):
 			return False
 		return super().has_add_permission(request)
 
+
+@admin.register(OpenHeavenDevotional)
+class OpenHeavenDevotionalAdmin(admin.ModelAdmin):
+    list_display = ("date", "title", "is_active", "updated_at")
+    list_filter = ("is_active",)
+    search_fields = ("title", "content")
+    list_editable = ("is_active",)
+    date_hierarchy = "date"
+    fieldsets = (
+        (None, {
+            "fields": ("date", "title", "is_active"),
+        }),
+        ("Reading & Memory Verse", {
+            "fields": ("bible_reading", "memory_verse", "memory_verse_text"),
+        }),
+        ("Message", {
+            "fields": ("content",),
+            "classes": ("wide",),
+            "description": "Paste the full devotional message. Use blank lines to separate paragraphs.",
+        }),
+        ("Prayer & Hymn", {
+            "fields": ("prayer_point", "hymn"),
+        }),
+    )

@@ -10,7 +10,8 @@ from .models import (
     AboutPage, TeamMember, ContactPage, ContactMessage,
     Book, AudioFile, WeeklyQuiz, BookQuestion, UserAnswer,
     GalleryImage, DailyPrayer, PrayerRequest, HomeSection,
-    OnlineGivingPage, GivingPurpose, GivingRecord, LiveStreamSettings
+    OnlineGivingPage, GivingPurpose, GivingRecord, LiveStreamSettings,
+    OpenHeavenDevotional
 )
 from .serializers import (
 	EventSerializer,
@@ -159,6 +160,25 @@ class OpenHeavenView(APIView):
         if not date_str:
             date_str = timezone.localdate().isoformat()
 
+        # Priority 1: manually-entered devotional from the database
+        try:
+            manual = OpenHeavenDevotional.objects.get(date=date_str, is_active=True)
+            return Response({
+                "title": manual.title,
+                "date": date_str,
+                "topic": "",
+                "bible_reading": manual.bible_reading,
+                "memory_verse": manual.memory_verse,
+                "memory_verse_text": manual.memory_verse_text,
+                "content": [p.strip() for p in manual.content.split("\n\n") if p.strip()],
+                "prayer_point": manual.prayer_point,
+                "hymn": manual.hymn,
+                "reflection": None,
+            })
+        except OpenHeavenDevotional.DoesNotExist:
+            pass  # Fall through to scraping
+
+        # Priority 2: scrape from openheavensdaily.com
         feed_url = "https://www.openheavensdaily.com/feeds/posts/default?alt=json&max-results=60"
         try:
             feed_raw = _http_get(feed_url)
@@ -218,8 +238,11 @@ class OpenHeavenView(APIView):
 
             raw_html = (target_entry.get("content", {}) or {}).get("$t") or (target_entry.get("summary", {}) or {}).get("$t") or ""
             if post_href:
-                post_html = _http_get(post_href)
-                raw_html = _extract_blogger_post_body(post_html)
+                try:
+                    post_html = _http_get(post_href, timeout_seconds=8)
+                    raw_html = _extract_blogger_post_body(post_html)
+                except Exception:
+                    pass  # Fall back to feed content already in raw_html
 
             text = _strip_html_to_text(raw_html)
             devotional = _parse_openheavens_text(text, title, date_str)
