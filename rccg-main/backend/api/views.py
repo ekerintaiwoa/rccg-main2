@@ -176,7 +176,6 @@ class OpenHeavenView(APIView):
         if not date_str:
             date_str = timezone.localdate().isoformat()
 
-<<<<<<< HEAD
         # Priority 1: manually-entered devotional from the database
         try:
             manual = OpenHeavenDevotional.objects.get(date=date_str, is_active=True)
@@ -195,18 +194,13 @@ class OpenHeavenView(APIView):
         except OpenHeavenDevotional.DoesNotExist:
             pass  # Fall through to scraping
 
-        # Priority 2: scrape from openheavensdaily.com
-        feed_url = "https://www.openheavensdaily.com/feeds/posts/default?alt=json&max-results=60"
-=======
         try:
             target_date = datetime.date.fromisoformat(date_str)
         except ValueError:
             return Response({"detail": "Invalid date format. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Fetch Open Heaven posts from the RCCG Online WordPress REST API.
-        # We request posts published within a ±2-day window around the target date
-        # to account for timezone differences and early-publishing, then match by
-        # title (preferred) or post date (fallback) — same strategy as before.
+        # Priority 2: scrape from rccgonline.org WordPress REST API.
+        # Request posts in a ±2-day window then match by title (preferred) or date (fallback).
         after_date = (target_date - datetime.timedelta(days=1)).isoformat()
         before_date = (target_date + datetime.timedelta(days=2)).isoformat()
         feed_url = (
@@ -216,7 +210,6 @@ class OpenHeavenView(APIView):
             "&categories_exclude=&search=open+heaven"
         )
 
->>>>>>> 70f9e8edb9f2860bb88dfde8e812a20717570504
         try:
             feed_raw = _http_get(feed_url)
             entries = json.loads(feed_raw)
@@ -283,28 +276,20 @@ class OpenHeavenView(APIView):
             title = (target_entry.get("title") or {}).get("rendered", "") or ""
             post_href = target_entry.get("link") or ""
 
-<<<<<<< HEAD
-            raw_html = (target_entry.get("content", {}) or {}).get("$t") or (target_entry.get("summary", {}) or {}).get("$t") or ""
-            if post_href:
-                try:
-                    post_html = _http_get(post_href, timeout_seconds=8)
-                    raw_html = _extract_blogger_post_body(post_html)
-                except Exception:
-                    pass  # Fall back to feed content already in raw_html
-=======
-            # Prefer the full rendered content; fall back to excerpt.
+            # Prefer the full rendered content from the REST API; fall back to excerpt.
             raw_html = (
                 (target_entry.get("content") or {}).get("rendered")
                 or (target_entry.get("excerpt") or {}).get("rendered")
                 or ""
             )
 
-            # If the REST API returned a truncated excerpt, fetch the full post page
-            # and extract the article body directly from the HTML.
+            # If the content is truncated/empty, fetch the full post page and parse the article body.
             if post_href and (not raw_html or len(raw_html) < 200):
-                post_html = _http_get(post_href)
-                raw_html = _extract_rccgonline_post_body(post_html) or raw_html
->>>>>>> 70f9e8edb9f2860bb88dfde8e812a20717570504
+                try:
+                    post_html = _http_get(post_href, timeout_seconds=8)
+                    raw_html = _extract_rccgonline_post_body(post_html) or raw_html
+                except Exception:
+                    pass  # Fall back to whatever raw_html we already have
 
             text = _strip_html_to_text(raw_html)
             devotional = _parse_openheavens_text(text, title, date_str)
