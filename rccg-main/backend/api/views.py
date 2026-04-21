@@ -36,9 +36,10 @@ from .serializers import (
 )
 
 
-def _http_get(url: str, timeout_seconds: int = 20) -> str:
+def _http_get(url: str, timeout_seconds: int = 20, is_json: bool = False) -> str:
     import urllib.request
 
+    accept_header = "application/json" if is_json else "text/html,application/json;q=0.9,*/*;q=0.8"
     req = urllib.request.Request(
         url,
         headers={
@@ -47,7 +48,7 @@ def _http_get(url: str, timeout_seconds: int = 20) -> str:
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/122.0.0.0 Safari/537.36"
             ),
-            "Accept": "text/html,application/json;q=0.9,*/*;q=0.8",
+            "Accept": accept_header,
         },
     )
     with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
@@ -168,30 +169,103 @@ class OpenHeavenView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, *args, **kwargs):
+        import datetime, json, re
+        
         date_str = request.query_params.get("date")
         if not date_str:
             date_str = timezone.localdate().isoformat()
 
+        # Priority 1: Check for manually-entered devotional
         try:
-            entry = OpenHeavenDevotional.objects.get(date=date_str, is_active=True)
+            manual = OpenHeavenDevotional.objects.get(date=date_str, is_active=True)
+            return Response({
+                "title": manual.title,
+                "date": date_str,
+                "topic": "",
+                "bible_reading": manual.bible_reading,
+                "memory_verse": manual.memory_verse,
+                "memory_verse_text": manual.memory_verse_text,
+                "content": [p.strip() for p in manual.content.split("\n\n") if p.strip()],
+                "prayer_point": manual.prayer_point,
+                "hymn": manual.hymn,
+                "reflection": None,
+            })
         except OpenHeavenDevotional.DoesNotExist:
-            return Response(
-                {"detail": "No devotional has been posted for this date yet. Please check back later."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            pass  # Continue to scraping
 
-        return Response({
-            "title": entry.title,
-            "date": date_str,
-            "topic": "",
-            "bible_reading": entry.bible_reading,
-            "memory_verse": entry.memory_verse,
-            "memory_verse_text": entry.memory_verse_text,
-            "content": [p.strip() for p in entry.content.split("\n\n") if p.strip()],
-            "prayer_point": entry.prayer_point,
-            "hymn": entry.hymn,
-            "reflection": None,
-        })
+        try:
+            target_date = datetime.date.fromisoformat(date_str)
+        except ValueError:
+            return Response({"detail": "Invalid date format. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Priority 2: Scrape from rccgonline.org WordPress REST API.
+        after_date = (target_date - datetime.timedelta(days=1)).isoformat()
+        before_date = (target_date + datetime.timedelta(days=2)).isoformat()
+        feed_url = f"https://rccgonline.org/wp-json/wp/v2/posts?after={after_date}T00:00:00&before={before_date}T00:00:00&search=open+heaven"
+
+        try:
+            feed_raw = _http_get(feed_url, is_json=True)
+            entries = json.loads(feed_raw)
+        except Exception as exc:
+            return Response({"detail": "Failed to fetch devotional feed", "error": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+        if not type(entries) is list or not entries:
+            return Response({"detail": "Devotional not found for date"}, status=status.HTTP_404_NOT_FOUND)
+
+        # --- Match by title containing the date ---
+        month_name = target_date.strftime("%B").lower()
+        month_abbrev = target_date.strftime("%b").lower()
+        month_candidates = {month_name, month_abbrev}
+        if month_abbrev == "sep":
+            month_candidates.add("sept")
+        year_str = str(target_date.year)
+        day_num = target_date.day
+        day_re = re.compile(rf"\b0?{day_num}(st|nd|rd|th)?\b", re.IGNORECASE)
+
+        target_entry = None
+        for entry in entries:
+            title_rendered = (entry.get("title") or {}).get("rendered", "") or ""
+            title_text = title_rendered.lower()
+            if (
+                any(m in title_text for m in month_candidates)
+                and year_str in title_text
+                and day_re.search(title_text)
+            ):
+                target_entry = entry
+                break
+
+        # --- Fallback: match by the post timestamp ---
+        if not target_entry:
+            for entry in entries:
+                stamp = entry.get("date") or entry.get("date_gmt") or ""
+                if stamp.startswith(date_str):
+                    target_entry = entry
+                    break
+
+        if not target_entry:
+            return Response({"detail": "Devotional not found for date"}, status=status.HTTP_404_NOT_FOUND)
+
+        title = (target_entry.get("title") or {}).get("rendered", "") or ""
+        post_href = target_entry.get("link") or ""
+
+        # Prefer the full rendered content from the REST API; fall back to excerpt.
+        raw_html = (
+            (target_entry.get("content") or {}).get("rendered")
+            or (target_entry.get("excerpt") or {}).get("rendered")
+            or ""
+        )
+
+        # If the content is truncated/empty, fetch the full post page and parse the article body.
+        if post_href and (not raw_html or len(raw_html) < 200):
+            try:
+                post_html = _http_get(post_href, timeout_seconds=8)
+                raw_html = _extract_rccgonline_post_body(post_html) or raw_html
+            except Exception:
+                pass  # Fall back to whatever raw_html we already have
+
+        text = _strip_html_to_text(raw_html)
+        devotional = _parse_openheavens_text(text, title, date_str)
+        return Response(devotional)
 
 
 class EventViewSet(viewsets.ModelViewSet):
