@@ -112,7 +112,13 @@ export async function fetchDevotional(date: string): Promise<Devotional | null> 
 
     const targetEntry = entries.find((e: any) => {
       const t = (e.title.$t || '').toLowerCase();
-      return t.includes(monthName) && t.includes(yyyy) && dayRegex.test(t);
+      return t.includes(monthName) 
+        && t.includes(yyyy) 
+        && dayRegex.test(t)
+        && t.includes('open heaven')
+        && !t.includes('teen')
+        && !t.includes('prayer')
+        && !t.includes('declaration');
     });
 
     if (!targetEntry) return null;

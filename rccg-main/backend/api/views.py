@@ -117,21 +117,21 @@ def _parse_openheavens_text(raw_text: str, title: str, date_str: str) -> dict:
         return rest[:end_idx].strip()
 
     next_headings = [
-        r"\n[^\n]*?(?:READ|BIBLE TEXT)\s*:\s*",
-        r"\n[^\n]*?(?:MESSAGE)\s*\n",
-        r"\n[^\n]*?(?:KEY POINT|PRAYER POINT|ACTION POINT)[^\n]*\n",
-        r"\n[^\n]*?(?:HYMN)[^\n]*",
-        r"\n[^\n]*?(?:BIBLE IN ONE YEAR)",
+        r"(?:^|\n)\s*(?:READ|BIBLE TEXT)\s*:",
+        r"(?:^|\n)\s*(?:MESSAGE)\s*(?::|\n|$)",
+        r"(?:^|\n)\s*(?:KEY POINT|PRAYER POINT|ACTION POINT)\s*:",
+        r"(?:^|\n)\s*(?:HYMN)\s*:",
+        r"(?:^|\n)\s*(?:BIBLE IN ONE YEAR)\s*:",
     ]
 
-    mv_section = extract_content(r"\n[^\n]*?(?:MEMORISE|MEMORY VERSE)\s*\n", next_headings)
-    verses_section = extract_content(r"\n[^\n]*?(?:READ|BIBLE TEXT)\s*:\s*", next_headings)
-    message_section = extract_content(r"\n[^\n]*?(?:MESSAGE)\s*\n", next_headings)
+    mv_section = extract_content(r"(?:^|\n)\s*(?:MEMORISE|MEMORY VERSE)\s*:", next_headings)
+    verses_section = extract_content(r"(?:^|\n)\s*(?:READ|BIBLE TEXT)\s*:", next_headings)
+    message_section = extract_content(r"(?:^|\n)\s*(?:MESSAGE)\s*(?::|\n|$)", next_headings)
     prayer_points_section = extract_content(
-        r"\n[^\n]*?(?:KEY POINT|PRAYER POINT|ACTION POINT)[^\n]*\n",
+        r"(?:^|\n)\s*(?:KEY POINT|PRAYER POINT|ACTION POINT)\s*:",
         next_headings,
     )
-    hymn_section = extract_content(r"\n[^\n]*?(?:HYMN)[^\n]*", next_headings)
+    hymn_section = extract_content(r"(?:^|\n)\s*(?:HYMN)\s*:", next_headings)
 
     memory_verse_text = mv_section
     memory_verse = "Memory Verse"
@@ -201,7 +201,7 @@ class OpenHeavenView(APIView):
         # Priority 2: Scrape from rccgonline.org WordPress REST API.
         after_date = (target_date - datetime.timedelta(days=1)).isoformat()
         before_date = (target_date + datetime.timedelta(days=2)).isoformat()
-        feed_url = f"https://rccgonline.org/wp-json/wp/v2/posts?after={after_date}T00:00:00&before={before_date}T00:00:00&search=open+heaven"
+        feed_url = f"https://rccgonline.org/wp-json/wp/v2/posts?after={after_date}T00:00:00&before={before_date}T00:00:00&search=open+heaven&per_page=30"
 
         try:
             feed_raw = _http_get(feed_url, is_json=True)
@@ -230,6 +230,10 @@ class OpenHeavenView(APIView):
                 any(m in title_text for m in month_candidates)
                 and year_str in title_text
                 and day_re.search(title_text)
+                and "open heaven" in title_text
+                and "teens" not in title_text
+                and "prayer points" not in title_text
+                and "declaration" not in title_text
             ):
                 target_entry = entry
                 break
@@ -238,7 +242,14 @@ class OpenHeavenView(APIView):
         if not target_entry:
             for entry in entries:
                 stamp = entry.get("date") or entry.get("date_gmt") or ""
-                if stamp.startswith(date_str):
+                title_text = ((entry.get("title") or {}).get("rendered", "") or "").lower()
+                if (
+                    stamp.startswith(date_str)
+                    and "open heaven" in title_text
+                    and "teens" not in title_text
+                    and "prayer" not in title_text
+                    and "declaration" not in title_text
+                ):
                     target_entry = entry
                     break
 
