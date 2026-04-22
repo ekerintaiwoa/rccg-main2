@@ -117,21 +117,21 @@ def _parse_openheavens_text(raw_text: str, title: str, date_str: str) -> dict:
         return rest[:end_idx].strip()
 
     next_headings = [
-        r"(?:^|\n)\s*(?:READ|BIBLE TEXT)\s*:",
-        r"(?:^|\n)\s*(?:MESSAGE)\s*(?::|\n|$)",
-        r"(?:^|\n)\s*(?:KEY POINT|PRAYER POINT|ACTION POINT)\s*:",
-        r"(?:^|\n)\s*(?:HYMN)\s*:",
-        r"(?:^|\n)\s*(?:BIBLE IN ONE YEAR)\s*:",
+        r"(?:^|\n)[^\n]*?(?:READ|BIBLE TEXT)\s*:",
+        r"(?:^|\n)[^\n]*?(?:MESSAGE)\s*(?:\n|$)",
+        r"(?:^|\n)[^\n]*?(?:KEY POINT|PRAYER POINT|ACTION POINT)\s*:",
+        r"(?:^|\n)[^\n]*?(?:HYMN)[\s\d:]*(?:\n|$)",
+        r"(?:^|\n)[^\n]*?(?:BIBLE IN ONE YEAR)\s*:",
     ]
 
-    mv_section = extract_content(r"(?:^|\n)\s*(?:MEMORISE|MEMORY VERSE)\s*:", next_headings)
-    verses_section = extract_content(r"(?:^|\n)\s*(?:READ|BIBLE TEXT)\s*:", next_headings)
-    message_section = extract_content(r"(?:^|\n)\s*(?:MESSAGE)\s*(?::|\n|$)", next_headings)
+    mv_section = extract_content(r"(?:^|\n)[^\n]*?(?:MEMORISE|MEMORY VERSE)\s*:", next_headings)
+    verses_section = extract_content(r"(?:^|\n)[^\n]*?(?:READ|BIBLE TEXT)\s*:", next_headings)
+    message_section = extract_content(r"(?:^|\n)[^\n]*?(?:MESSAGE)\s*(?:\n|$)", next_headings)
     prayer_points_section = extract_content(
-        r"(?:^|\n)\s*(?:KEY POINT|PRAYER POINT|ACTION POINT)\s*:",
+        r"(?:^|\n)[^\n]*?(?:KEY POINT|PRAYER POINT|ACTION POINT)\s*:",
         next_headings,
     )
-    hymn_section = extract_content(r"(?:^|\n)\s*(?:HYMN)\s*:", next_headings)
+    hymn_section = extract_content(r"(?:^|\n)[^\n]*?(?:HYMN)[\s\d:]*(?:\n|$)", next_headings)
 
     memory_verse_text = mv_section
     memory_verse = "Memory Verse"
