@@ -157,6 +157,10 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
       }
     };
 
+    fetchSlides();
+  }, []);
+
+  React.useEffect(() => {
     const hasSeenPrompt = sessionStorage.getItem('openHeavenPromptSeen');
     if (hasSeenPrompt) return;
 
@@ -202,7 +206,6 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
 
     fetchEvents();
     fetchHomeSections();
-    fetchSlides();
   }, []);
 
   const handlePrimaryClick = () => {
