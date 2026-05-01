@@ -39,64 +39,75 @@ interface HomeSection {
   bullets: HomeSectionBullet[];
 }
 
-export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
-  const slides = [
-    {
-      id: 1,
-      title: '2026: Our Year of Dominion',
-      subtitle: 'Genesis 1:26',
-      description:
-        "Step into a year of authority, purpose, and God-given dominion as we align our lives with God's original mandate.",
-      ctaPrimary: 'Plan Your Visit',
-      ctaSecondary: 'Watch Live',
-      image: hero,
-    },
-    {
-      id: 2,
-      title: 'A Home for Every Nation',
-      subtitle: 'RCCG House of Glory Lübeck',
-      description:
-        "No matter your background, there is a place for you here to belong, grow, and serve in God's family.",
-      ctaPrimary: "I'm New",
-      ctaSecondary: 'View Events',
-      image:
-        'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1600&q=80',
-    },
-    {
-      id: 3,
-      title: 'Growing Stronger in the Word',
-      subtitle: 'Sermons, Bible Study & Prayer',
-      description:
-        'From Sunday messages to midweek Bible studies, we are committed to helping you build a strong foundation in the Word.',
-      ctaPrimary: 'Latest Sermons',
-      ctaSecondary: 'Give Online',
-      image:
-        'https://images.unsplash.com/photo-1490730141103-6ac27d020028?auto=format&fit=crop&w=1600&q=80',
-    },
-    {
-      id: 4,
-      title: 'Raising the Next Generation',
-      subtitle: 'Children, Teens & Youth Ministry',
-      description:
-        'Dynamic ministries for children, teenagers, and young adults where destinies are shaped and gifts are discovered.',
-      ctaPrimary: 'Family Ministries',
-      ctaSecondary: 'View Events',
-      image:
-        'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80',
-    },
-    {
-      id: 5,
-      title: 'Loving God, Serving People',
-      subtitle: 'Outreach & Community Impact',
-      description:
-        'Through outreach, missions, and practical acts of love, we bring the light of Christ to our city and beyond.',
-      ctaPrimary: 'Get Involved',
-      ctaSecondary: 'Give Online',
-      image:
-        'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1600&q=80',
-    },
-  ];
+interface SlideData {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  image: string;
+  ctaPrimary: string;
+  ctaSecondary: string;
+}
 
+const DEFAULT_SLIDES: SlideData[] = [
+  {
+    id: 1,
+    title: '2026: Our Year of Dominion',
+    subtitle: 'Genesis 1:26',
+    description:
+      "Step into a year of authority, purpose, and God-given dominion as we align our lives with God's original mandate.",
+    ctaPrimary: 'Plan Your Visit',
+    ctaSecondary: 'Watch Live',
+    image: hero,
+  },
+  {
+    id: 2,
+    title: 'A Home for Every Nation',
+    subtitle: 'RCCG House of Glory Lübeck',
+    description:
+      "No matter your background, there is a place for you here to belong, grow, and serve in God's family.",
+    ctaPrimary: "I'm New",
+    ctaSecondary: 'View Events',
+    image:
+      'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1600&q=80',
+  },
+  {
+    id: 3,
+    title: 'Growing Stronger in the Word',
+    subtitle: 'Sermons, Bible Study & Prayer',
+    description:
+      'From Sunday messages to midweek Bible studies, we are committed to helping you build a strong foundation in the Word.',
+    ctaPrimary: 'Latest Sermons',
+    ctaSecondary: 'Give Online',
+    image:
+      'https://images.unsplash.com/photo-1490730141103-6ac27d020028?auto=format&fit=crop&w=1600&q=80',
+  },
+  {
+    id: 4,
+    title: 'Raising the Next Generation',
+    subtitle: 'Children, Teens & Youth Ministry',
+    description:
+      'Dynamic ministries for children, teenagers, and young adults where destinies are shaped and gifts are discovered.',
+    ctaPrimary: 'Family Ministries',
+    ctaSecondary: 'View Events',
+    image:
+      'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80',
+  },
+  {
+    id: 5,
+    title: 'Loving God, Serving People',
+    subtitle: 'Outreach & Community Impact',
+    description:
+      'Through outreach, missions, and practical acts of love, we bring the light of Christ to our city and beyond.',
+    ctaPrimary: 'Get Involved',
+    ctaSecondary: 'Give Online',
+    image:
+      'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1600&q=80',
+  },
+];
+
+export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
+  const [slides, setSlides] = React.useState<SlideData[]>(DEFAULT_SLIDES);
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [showDevotionalPrompt, setShowDevotionalPrompt] = React.useState(false);
   const [events, setEvents] = React.useState<EventApi[]>([]);
@@ -110,6 +121,8 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
   };
 
   React.useEffect(() => {
+    if (!slides.length) return;
+
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 7000);
@@ -118,6 +131,32 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
   }, [slides.length]);
 
   React.useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/slides/`);
+        if (!res.ok) {
+          throw new Error(`Failed to load slides: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const mappedSlides = data.map((slide: any) => ({
+            id: slide.id,
+            title: slide.title,
+            subtitle: slide.subtitle || '',
+            description: slide.description || '',
+            image: resolveMediaUrl(slide.image_url || slide.image_file) || hero,
+            ctaPrimary: slide.cta_primary || 'Learn More',
+            ctaSecondary: slide.cta_secondary || '',
+          }));
+          setSlides(mappedSlides);
+          setCurrentSlide(0);
+        }
+      } catch (err) {
+        console.error('Failed to load slides', err);
+      }
+    };
+
     const hasSeenPrompt = sessionStorage.getItem('openHeavenPromptSeen');
     if (hasSeenPrompt) return;
 
@@ -163,6 +202,7 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
 
     fetchEvents();
     fetchHomeSections();
+    fetchSlides();
   }, []);
 
   const handlePrimaryClick = () => {
