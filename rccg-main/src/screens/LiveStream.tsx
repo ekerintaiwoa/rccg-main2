@@ -39,10 +39,18 @@ function extractVideoId(url: string) {
   try {
     const parsedUrl = new URL(url);
     if (parsedUrl.hostname.includes('youtube.com')) {
-      return parsedUrl.searchParams.get('v');
+      // Standard watch URL: ?v=VIDEO_ID
+      const v = parsedUrl.searchParams.get('v');
+      if (v) return v;
+      // Live URL format: /live/VIDEO_ID
+      const liveMatch = parsedUrl.pathname.match(/\/live\/([^/?]+)/);
+      if (liveMatch) return liveMatch[1];
+      // Embed URL format: /embed/VIDEO_ID
+      const embedMatch = parsedUrl.pathname.match(/\/embed\/([^/?]+)/);
+      if (embedMatch) return embedMatch[1];
     }
     if (parsedUrl.hostname.includes('youtu.be')) {
-      return parsedUrl.pathname.slice(1);
+      return parsedUrl.pathname.slice(1).split('?')[0];
     }
   } catch (e) {
     console.error("Invalid YouTube URL:", e);
@@ -206,63 +214,56 @@ export const LiveStream: React.FC = () => {
           </p>
         </div>
 
-        {/* Content Section (Stream / Countdown) */}
-        <div className="bg-white rounded-3xl shadow-2xl shadow-blue-900/5 ring-1 ring-slate-100 p-2 sm:p-4 overflow-hidden">
-          {status === 'live' ? (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black"
-            >
-              <iframe
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-                title="YouTube Livestream"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="absolute top-0 left-0 w-full h-full border-0"
-              />
-            </motion.div>
-          ) : (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="relative aspect-video rounded-2xl overflow-hidden bg-slate-900 flex flex-col items-center justify-center p-8 text-white text-center"
-            >
-              {/* Optional background thumbnail dim */}
-              <div 
-                className="absolute inset-0 opacity-20 bg-cover bg-center"
-                style={{ backgroundImage: `url(https://img.youtube.com/vi/${videoId}/maxresdefault.jpg)` }}
-              ></div>
+        {/* Content Section (Stream + Countdown) */}
+        <div className="bg-white rounded-3xl shadow-2xl shadow-blue-900/5 ring-1 ring-slate-100 p-2 sm:p-4 overflow-hidden space-y-4">
+          
+          {/* Always show the YouTube player */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black"
+          >
+            <iframe
+              src={`https://www.youtube.com/embed/${videoId}${status === 'live' ? '?autoplay=1' : ''}`}
+              title="YouTube Livestream"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute top-0 left-0 w-full h-full border-0"
+            />
+          </motion.div>
 
-              <div className="z-10 space-y-8 flex flex-col items-center">
-                <Clock className="w-16 h-16 text-blue-400 opacity-80" />
-                
-                {status === 'ended' && (
-                  <h2 className="text-3xl font-bold text-slate-200 mb-2">Service has ended</h2>
-                )}
-                
-                <div className="space-y-4">
-                  <p className="text-lg text-blue-200 uppercase tracking-widest font-semibold">
-                    {status === 'ended' ? "Next service begins in" : "Stream begins in"}
+          {/* Show countdown banner when not live */}
+          {status !== 'live' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="rounded-2xl bg-slate-900 p-6 text-white text-center"
+            >
+              <div className="flex flex-col items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-blue-400" />
+                  <p className="text-sm text-blue-200 uppercase tracking-widest font-semibold">
+                    {status === 'ended' ? "Service ended — Next service begins in" : "Stream begins in"}
                   </p>
-                  
-                  {timeLeft ? (
-                    <div className="flex gap-4 sm:gap-6 lg:gap-8 items-center justify-center">
-                      <TimeBox value={timeLeft.d} label="Days" />
-                      <TimeSeparator />
-                      <TimeBox value={timeLeft.h} label="Hours" />
-                      <TimeSeparator />
-                      <TimeBox value={timeLeft.m} label="Minutes" />
-                      <TimeSeparator />
-                      <TimeBox value={timeLeft.s} label="Seconds" />
-                    </div>
-                  ) : (
-                    <div className="h-24 flex items-center">
-                      <span className="text-2xl animate-pulse text-slate-400">Calculating time...</span>
-                    </div>
-                  )}
                 </div>
+
+                {timeLeft ? (
+                  <div className="flex gap-4 sm:gap-6 items-center justify-center">
+                    <TimeBox value={timeLeft.d} label="Days" />
+                    <TimeSeparator />
+                    <TimeBox value={timeLeft.h} label="Hours" />
+                    <TimeSeparator />
+                    <TimeBox value={timeLeft.m} label="Minutes" />
+                    <TimeSeparator />
+                    <TimeBox value={timeLeft.s} label="Seconds" />
+                  </div>
+                ) : (
+                  <div className="h-16 flex items-center">
+                    <span className="text-xl animate-pulse text-slate-400">Calculating time...</span>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
