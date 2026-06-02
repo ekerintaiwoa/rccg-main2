@@ -149,17 +149,17 @@ export const Give: React.FC = () => {
       className="bg-slate-50 min-h-screen"
     >
       {/* Hero */}
-      <section className="bg-white py-20 border-b border-slate-100">
+      <section className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">
-            {pageData?.title || 'Support Our Mission'}
+          <h1 className="brand-heading text-4xl sm:text-5xl font-extrabold text-white mb-4">
+            Partner with the Work of God
           </h1>
-          <p className="text-lg text-slate-600 leading-relaxed mb-8">
-            {pageData?.subtitle || '"Each of you should give what you have decided in your heart to give, not reluctantly or under compulsion, for God loves a cheerful giver." — 2 Corinthians 9:7'}
+          <p className="text-lg sm:text-xl text-blue-100 leading-relaxed mb-8">
+            Your generosity supports worship, outreach, missions, and community impact. "Each of you should give what you have decided in your heart to give, not reluctantly or under compulsion, for God loves a cheerful giver." — 2 Corinthians 9:7
           </p>
           <div className="flex justify-center">
-            <span className="inline-flex items-center px-4 py-2 bg-slate-100 rounded-full text-sm font-medium text-slate-700">
-              <ShieldCheck className="w-4 h-4 mr-2 text-green-500" />
+            <span className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium text-blue-100 border border-white/20">
+              <ShieldCheck className="w-4 h-4 mr-2 text-green-300" />
               Secure 256-bit Encryption
             </span>
           </div>
@@ -168,7 +168,7 @@ export const Give: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Form */}
-        <div className="lg:col-span-7 bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+        <div className="lg:col-span-7 p-8 card">
           <h2 className="text-2xl font-bold mb-8 text-slate-900">Online Giving</h2>
           <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
             {/* Frequency */}
@@ -308,10 +308,10 @@ export const Give: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <button type="button" onClick={handleGivingSubmit} className="w-full mt-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-lg rounded-xl shadow-lg transition-all active:scale-[0.98]">
+              <button type="button" onClick={handleGivingSubmit} className="w-full mt-6 py-4 btn-primary text-white font-extrabold text-lg rounded-xl transition-all active:scale-[0.98]">
                 Generate Transfer Details
               </button>
-            )}
+            )} 
 
             {!isSubmitted && (
               <p className="text-center text-xs text-slate-400 mt-4">
@@ -330,7 +330,7 @@ export const Give: React.FC = () => {
           ]).map((item) => {
             const IconComp = (Icons as any)[item.icon] || Icons.Heart;
             return (
-              <div key={item.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+              <div key={item.id} className="card p-6">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${item.color === 'blue' ? 'bg-blue-50 text-blue-600' :
                   item.color === 'green' ? 'bg-green-50 text-green-600' :
                     'bg-orange-50 text-orange-600'

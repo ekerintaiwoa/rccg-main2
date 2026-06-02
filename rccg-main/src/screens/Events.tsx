@@ -68,17 +68,20 @@ export const Events: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
+      className="bg-white min-h-screen"
     >
-      <div className="mb-12">
-        <h1 className="text-4xl font-extrabold text-slate-900 mb-4">Church Events & Calendar</h1>
-        <p className="text-lg text-slate-600 max-w-2xl">Stay connected with our community. From weekly worship to small groups and youth services, there's a place for everyone.</p>
-      </div>
+      {/* Hero */}
+      <section className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">Church Events & Calendar</h1>
+          <p className="text-lg text-blue-100 max-w-2xl mx-auto">Stay connected with our community. From weekly worship to small groups and prayer meetings, there's a place for everyone.</p>
+        </div>
+      </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Calendar View */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="card overflow-hidden">
             <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100">
               <div>
                 <h2 className="text-xl font-bold text-slate-900">{`${monthName} ${currentYear}`}</h2>
@@ -212,7 +215,7 @@ export const Events: React.FC = () => {
                       setSelectedEventId(event.id);
                       setShowDetailModal(true);
                     }}
-                    className={`bg-white border p-5 rounded-2xl shadow-sm flex gap-4 hover:border-blue-600 transition-all group cursor-pointer ${
+                    className={`card p-5 flex gap-4 hover:border-blue-600 transition-all group cursor-pointer ${
                       selectedEventId === event.id ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200'
                     }`}
                   >

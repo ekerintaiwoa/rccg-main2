@@ -244,112 +244,51 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      {/* Hero Carousel Section */}
-      <section className="bg-slate-50 py-12 sm:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
-          <div className="relative w-full max-w-4xl overflow-hidden rounded-3xl bg-white border border-slate-200 shadow-2xl text-slate-900">
-            {/* Background image */}
-            <div className="absolute inset-0 z-0">
-              <motion.img
-                key={slides[currentSlide].id}
-                src={slides[currentSlide].image}
-                alt={slides[currentSlide].title}
-                className="w-full h-full object-cover opacity-40"
-                initial={{ opacity: 0, scale: 1.02 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6 }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/90 to-blue-50/80" />
+      {/* Mission-Focused Hero */}
+      <section className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h1 className="brand-heading text-4xl sm:text-5xl text-white font-extrabold mb-4">Worship God. Grow in Faith. Impact the World.</h1>
+            <p className="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed mb-8">We are a family of believers passionate about God, committed to raising champions and taking territories for Christ.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button onClick={() => setActiveTab('about')} className="btn-primary text-white font-bold">Join Us This Sunday</button>
+              <button onClick={() => setActiveTab('live')} className="px-8 py-3 border border-white rounded-lg text-white font-bold hover:bg-white/10 transition-colors">Watch Live Service</button>
             </div>
+          </div>
 
-            {/* Content */}
-            <div className="relative z-10 px-6 py-10 sm:px-10 sm:py-12 flex flex-col lg:flex-row items-center gap-10">
-              <div className="flex-1 text-center lg:text-left">
-                <motion.h1
-                  key={slides[currentSlide].title}
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.6 }}
-                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-3 sm:mb-4"
-                >
-                  {slides[currentSlide].title}
-                </motion.h1>
-
-                {slides[currentSlide].subtitle && (
-                  <motion.p
-                    key={slides[currentSlide].subtitle}
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.05 }}
-                    className="text-base sm:text-lg md:text-xl text-blue-700 font-semibold mb-3"
-                  >
-                    {slides[currentSlide].subtitle}
-                  </motion.p>
-                )}
-
-                <motion.p
-                  key={slides[currentSlide].description}
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
-                  className="max-w-xl text-sm sm:text-base md:text-lg text-slate-600 mb-6 sm:mb-8 mx-auto lg:mx-0"
-                >
-                  {slides[currentSlide].description}
-                </motion.p>
-
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.15 }}
-                  className="flex flex-col sm:flex-row justify-center lg:justify-start items-center gap-4 mb-6"
-                >
-                  <button
-                    onClick={handlePrimaryClick}
-                    className="w-full sm:w-auto px-8 py-3 sm:py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 hover:scale-105 transition-transform shadow-lg"
-                  >
-                    {slides[currentSlide].ctaPrimary}
-                  </button>
-
-                  <button
-                    onClick={handleSecondaryClick}
-                    className="w-full sm:w-auto px-8 py-3 sm:py-4 bg-blue-50 border border-blue-100 text-blue-700 font-bold rounded-lg hover:bg-blue-100 transition-all flex items-center justify-center gap-2"
-                  >
-                    {slides[currentSlide].ctaSecondary.includes('Watch') && (
-                      <Play className="w-5 h-5" />
-                    )}
-                    {slides[currentSlide].ctaSecondary}
-                  </button>
-                </motion.div>
-
-                {/* Dots */}
-                <div className="flex justify-center lg:justify-start gap-2">
-                  {slides.map((slide, index) => (
-                    <button
-                      key={slide.id}
-                      onClick={() => setCurrentSlide(index)}
-                      className={`h-2 rounded-full transition-all ${currentSlide === index ? 'w-6 bg-blue-600' : 'w-2 bg-blue-200'
-                        }`}
-                      aria-label={`Go to slide ${index + 1}`}
-                    />
-                  ))}
-                </div>
+          {/* Service Times Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { title: 'Sunday Service', time: '09:00 - 11:30' },
+              { title: 'Wednesday Study', time: '18:30 - 20:00' },
+              { title: 'Friday Prayer', time: '18:30 - 20:00' },
+              { title: 'Holy Ghost Svc', time: '1st Fri 22:00' }
+            ].map((s, i) => (
+              <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <p className="text-xs font-semibold text-blue-100">{s.title}</p>
+                <p className="font-bold text-white">{s.time}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-              {/* Side image on large screens */}
-              <div className="hidden lg:block flex-1 max-w-md">
-                <div className="relative w-full pt-[70%] rounded-3xl overflow-hidden border border-slate-200 shadow-xl">
-                  <motion.img
-                    key={`side-${slides[currentSlide].id}`}
-                    src={slides[currentSlide].image}
-                    alt={slides[currentSlide].title}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    initial={{ opacity: 0.5, scale: 1.02 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.6 }}
-                  />
-                </div>
+      {/* Core Values */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {[
+              { icon: '🙏', title: 'Worship', desc: "Experience God's presence in our powerful services." },
+              { icon: '📖', title: 'Word', desc: 'Teachings that transform lives and build strong faith.' },
+              { icon: '❤️', title: 'Community', desc: 'Connect, grow, and do life together in love.' },
+              { icon: '🌍', title: 'Mission', desc: 'Raising champions and taking territories for Christ.' }
+            ].map((v, i) => (
+              <div key={i} className="text-center">
+                <div className="text-5xl mb-3">{v.icon}</div>
+                <h3 className="font-bold text-xl text-slate-900 mb-2">{v.title}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">{v.desc}</p>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -448,64 +387,48 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
       )}
 
       {/* Upcoming Events */}
-      <section className="py-24 bg-slate-50">
+      <section className="py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-slate-900">Upcoming Events</h2>
-              <p className="text-slate-500 mt-2">Life is better together. See what's happening this month.</p>
-            </div>
-            <button
-              onClick={() => setActiveTab('events')}
-              className="hidden sm:flex items-center gap-2 text-blue-600 font-semibold hover:underline"
-            >
-              View Calendar <ArrowRight className="w-4 h-4" />
-            </button>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">Upcoming Events</h2>
+            <p className="text-slate-600 text-lg">Join us and grow your faith</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-10">
             {events.length === 0 ? (
-              <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-slate-100">
+              <div className="col-span-full py-12 text-center card">
                 <p className="text-slate-500 font-medium text-lg">No upcoming events scheduled right now.</p>
-                <p className="text-slate-400 text-sm mt-1">Please check back later.</p>
+                <p className="text-slate-400 text-sm mt-1">Check back soon for more gatherings.</p>
               </div>
             ) : (
               events.slice(0, 3).map((event) => {
                 const dateObj = new Date(event.date);
                 const month = dateObj.toLocaleString('en-US', { month: 'short' }).toUpperCase();
                 const day = dateObj.getDate();
-                const dateLabel = `${month} ${day}`;
-                
                 const imageSrc = resolveMediaUrl(event.image_file) || resolveMediaUrl(event.image_url) || 'https://images.unsplash.com/photo-1438032005730-c779502df39b?auto=format&fit=crop&w=800&q=80';
 
                 return (
-                  <div
-                    key={event.id}
-                    className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
-                  >
-                    <div className="h-48 overflow-hidden">
-                      <img
-                        src={imageSrc}
-                        alt={event.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
+                  <div key={event.id} className="card overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer" onClick={() => setActiveTab('events')}>
+                    <div className="h-48 overflow-hidden relative">
+                      <img src={imageSrc} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-blue-600">{month} {day}</div>
                     </div>
                     <div className="p-6">
-                      <div className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">
-                        {dateLabel} • {event.time}
-                      </div>
-                      <h3 className="text-xl font-bold mb-3 text-slate-800">{event.title}</h3>
-                      <p className="text-slate-600 text-sm mb-4 line-clamp-2">{event.description}</p>
-                      <button
-                        onClick={() => setActiveTab('events')}
-                        className="text-blue-600 font-medium text-sm hover:underline"
-                      >
-                        Learn more
-                      </button>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">{event.title}</h3>
+                      <p className="text-slate-600 text-sm mb-3 flex items-center gap-2"><Clock className="w-4 h-4" />{event.time}</p>
+                      <p className="text-slate-600 text-sm line-clamp-2 mb-4">{event.description}</p>
+                      <button className="text-blue-600 font-semibold text-sm hover:underline">Learn More →</button>
                     </div>
                   </div>
                 );
               })
             )}
+          </div>
+
+          <div className="text-center">
+            <button onClick={() => setActiveTab('events')} className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors">
+              View Full Calendar <ArrowRight className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </section>
