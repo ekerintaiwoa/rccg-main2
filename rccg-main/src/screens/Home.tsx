@@ -293,6 +293,48 @@ export const Home: React.FC<HomeProps> = ({ setActiveTab }) => {
         </div>
       </section>
 
+      {/* Slide Showcase Section */}
+      <section className="py-24 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600 mb-3">Featured Messages</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">Recent Highlights from Our Church Family</h2>
+              <p className="text-slate-600 max-w-2xl leading-relaxed mb-8">Explore key themes from our latest ministry focus, including worship, prayer, outreach, and life transformation.</p>
+
+              <div className="grid gap-4">
+                <div className="rounded-[28px] overflow-hidden border border-slate-200 bg-white shadow-2xl">
+                  <div className="relative h-72 overflow-hidden">
+                    <img src={slides[currentSlide].image} alt={slides[currentSlide].title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                      <p className="text-xs uppercase tracking-[0.35em] text-blue-300 mb-2">{slides[currentSlide].subtitle}</p>
+                      <h3 className="text-2xl font-bold mb-2">{slides[currentSlide].title}</h3>
+                      <p className="text-sm text-slate-100 max-w-xl">{slides[currentSlide].description}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <button onClick={handlePrimaryClick} className="btn-primary w-full px-6 py-4 text-sm font-semibold">{slides[currentSlide].ctaPrimary}</button>
+                  <button onClick={handleSecondaryClick} className="w-full px-6 py-4 border border-slate-200 rounded-3xl text-slate-700 font-semibold hover:bg-slate-100 transition">{slides[currentSlide].ctaSecondary || 'Learn More'}</button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              {slides.map((slide, index) => (
+                <button key={slide.id} onClick={() => setCurrentSlide(index)} className={`text-left rounded-3xl border px-5 py-4 transition ${currentSlide === index ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-400'}`}>
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-500 mb-2">{slide.subtitle}</p>
+                  <h4 className="font-semibold text-slate-900 mb-1">{slide.title}</h4>
+                  <p className="text-sm text-slate-600 line-clamp-2">{slide.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Dynamic Welcome Sections */}
       {homeSections.length > 0 ? (
         homeSections.map((section, index) => (
