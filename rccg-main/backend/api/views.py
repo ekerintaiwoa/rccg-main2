@@ -209,8 +209,8 @@ class OpenHeavenView(APIView):
         except Exception as exc:
             return Response({"detail": "Failed to fetch devotional feed", "error": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
 
-        if not type(entries) is list or not entries:
-            return Response({"detail": "Devotional not found for date"}, status=status.HTTP_404_NOT_FOUND)
+        if not isinstance(entries, list):
+            entries = []
 
         # --- Match by title containing the date ---
         month_name = target_date.strftime("%B").lower()
@@ -254,6 +254,55 @@ class OpenHeavenView(APIView):
                     break
 
         if not target_entry:
+            # Priority 3: Fallback to openheavensdaily.com Blogger feed.
+            try:
+                blogger_feed_url = "https://www.openheavensdaily.com/feeds/posts/default?alt=json&max-results=120"
+                blogger_raw = _http_get(blogger_feed_url, is_json=True)
+                blogger_data = json.loads(blogger_raw)
+                blogger_entries = (blogger_data.get("feed") or {}).get("entry") or []
+
+                blogger_target = None
+                for entry in blogger_entries:
+                    title_text = (((entry.get("title") or {}).get("$t") or "")).lower()
+                    if (
+                        any(m in title_text for m in month_candidates)
+                        and year_str in title_text
+                        and day_re.search(title_text)
+                        and "open heaven" in title_text
+                        and "teens" not in title_text
+                        and "prayer" not in title_text
+                        and "declaration" not in title_text
+                    ):
+                        blogger_target = entry
+                        break
+
+                if blogger_target:
+                    title = ((blogger_target.get("title") or {}).get("$t") or "").strip()
+                    raw_html = (
+                        ((blogger_target.get("content") or {}).get("$t"))
+                        or ((blogger_target.get("summary") or {}).get("$t"))
+                        or ""
+                    )
+
+                    post_href = ""
+                    for link in (blogger_target.get("link") or []):
+                        if link.get("rel") == "alternate" and link.get("href"):
+                            post_href = link.get("href")
+                            break
+
+                    if post_href:
+                        try:
+                            post_html = _http_get(post_href, timeout_seconds=10)
+                            raw_html = _extract_blogger_post_body(post_html) or raw_html
+                        except Exception:
+                            pass
+
+                    text = _strip_html_to_text(raw_html)
+                    devotional = _parse_openheavens_text(text, title, date_str)
+                    return Response(devotional)
+            except Exception:
+                pass
+
             return Response({"detail": "Devotional not found for date"}, status=status.HTTP_404_NOT_FOUND)
 
         title = (target_entry.get("title") or {}).get("rendered", "") or ""

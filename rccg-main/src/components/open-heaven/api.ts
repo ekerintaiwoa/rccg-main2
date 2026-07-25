@@ -93,12 +93,8 @@ export async function fetchDevotional(date: string): Promise<Devotional | null> 
       return (await backendRes.json()) as Devotional;
     }
 
-    // If backend says "not found", respect that.
-    if (backendRes.status === 404) {
-      return null;
-    }
-
-    // Otherwise, fall back to the legacy public proxy.
+    // Fall back to the legacy public proxy when backend cannot provide content
+    // (e.g., upstream source has no matching post for that date).
     const res = await fetch(FALLBACK_URL);
     if (!res.ok) return null;
     const data = await res.json();

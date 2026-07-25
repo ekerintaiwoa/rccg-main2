@@ -3,6 +3,14 @@ import { API_BASE_URL } from '../config';
 import { motion, AnimatePresence } from 'motion/react';
 import { ImageIcon, Maximize2, X } from 'lucide-react';
 
+const resolveImageUrl = (imageUrl: string | undefined | null): string => {
+    if (!imageUrl) return '';
+    if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+
+    const apiOrigin = new URL(API_BASE_URL).origin;
+    return imageUrl.startsWith('/') ? `${apiOrigin}${imageUrl}` : `${apiOrigin}/${imageUrl}`;
+};
+
 export const Gallery: React.FC = () => {
     const [images, setImages] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -67,7 +75,7 @@ export const Gallery: React.FC = () => {
                             >
                                 <div className="w-full h-full bg-slate-100 flex items-center justify-center">
                                     <img
-                                        src={img.image}
+                                        src={resolveImageUrl(img.image)}
                                         alt={img.title || 'Gallery image'}
                                         className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                                     />
@@ -117,7 +125,7 @@ export const Gallery: React.FC = () => {
                         >
                             <div className="relative w-full flex justify-center">
                                 <img
-                                    src={selectedImage.image}
+                                    src={resolveImageUrl(selectedImage.image)}
                                     alt={selectedImage.title}
                                     className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
                                 />
